@@ -11,17 +11,10 @@ namespace sd
     public:
         using Ptr = std::shared_ptr<LoadingRamp>;
 
-        LoadingRamp(size_t id, size_t deliveryInterval = 1)
-            : SourceNode(id, deliveryInterval) {}
+        LoadingRamp(size_t id, size_t deliveryInterval = 1);
 
-        Product::Ptr moveOut() final
-        {
-            return std::move(createProduct());
-        }
+        Product::Ptr moveOutProduct() final;
 
-        Product::Ptr createProduct()
-        {
-            return std::make_unique<Product>();
-        }
+        Product::Ptr createProduct();
     };
 }

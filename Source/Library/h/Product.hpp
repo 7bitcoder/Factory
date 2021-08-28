@@ -12,6 +12,6 @@ namespace sd
     public:
         using Ptr = std::unique_ptr<Product>;
 
-        Product() : Identifiable(_idSeed++) {}
+        Product();
     };
 }

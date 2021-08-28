@@ -7,9 +7,8 @@ namespace sd
         const size_t _id;
 
     public:
-        Identifiable(size_t id) : _id(id) {}
+        Identifiable(size_t id);
 
-    public:
-        size_t getId() const { return _id; }
+        size_t getId() const;
     };
 }

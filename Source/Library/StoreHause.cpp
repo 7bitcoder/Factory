@@ -4,4 +4,5 @@
 
 namespace sd
 {
+    StoreHause::StoreHause(size_t id) : SinkNode(id) {}
 }

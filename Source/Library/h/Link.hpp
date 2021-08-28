@@ -1,6 +1,7 @@
 #pragma once
 #include <random>
 #include <iomanip>
+#include <vector>
 
 #include "Identifiable.hpp"
 #include "Product.hpp"
@@ -14,28 +15,22 @@ namespace sd
 
     class Random
     {
-
     private:
         std::random_device _rd;
         std::default_random_engine _eng;
         std::uniform_real_distribution<double> _distr;
-
-        Random() : _eng(_rd()), _distr(0, 1) {}
+        Random();
 
     public:
-        static Random &get()
-        {
-            static Random r;
-            return r;
-        }
-
-        double nextDouble() { return _distr(_eng); }
+        static Random &get();
+        double nextDouble();
     };
 
     class Link : public Identifiable
     {
     private:
         double _probability;
+        const double _baseProbability;
         std::weak_ptr<SourceNode> _source;
         std::shared_ptr<SinkNode> _sink;
 
@@ -43,11 +38,15 @@ namespace sd
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
-        Link(size_t id, double probability, std::shared_ptr<SinkNode> node);
+        Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
 
         void passProduct(Product::Ptr &&product);
 
-        double getProbability() const { return _probability; }
+        double getBaseProbability() const;
+
+        double getProbability() const;
+
+        void setProbability(double newProbability);
     };
 
     class SourceLinksHub
@@ -56,42 +55,19 @@ namespace sd
         std::vector<Link::Ptr> _links;
 
     public:
-        void registerLink(Link::Ptr link)
-        {
-            _links.emplace_back(link);
-        }
+        void bindLink(Link::Ptr link);
+        void unBindLink(size_t id);
+        void unBindLink(Link::Ptr link);
 
-        void passProduct(Product::Ptr &&product)
-        {
-            auto link = getRandomLink();
-            if (!link)
-            {
-                throw std::runtime_error("No links available");
-            }
-            link->passProduct(std::move(product));
-        }
+        void passProduct(Product::Ptr &&product);
 
-        bool connected() const { return !_links.empty(); }
+        bool connected() const;
 
     private:
-        Link::Ptr getRandomLink()
-        {
-            if (_links.empty())
-            {
-                return nullptr;
-            }
-            double propability = Random::get().nextDouble();
-            double accumulate = 0;
-            for (auto &link : _links)
-            {
-                accumulate += link->getProbability();
-                if (propability <= accumulate)
-                {
-                    return link;
-                }
-            }
-            return _links.back();
-        }
+        void normalize();
+
+    private:
+        Link::Ptr getRandomLink() const;
     };
 
     class SinkLinksHub
@@ -100,11 +76,10 @@ namespace sd
         std::vector<Link::WeakPtr> _links;
 
     public:
-        void registerLink(Link::Ptr link)
-        {
-            _links.emplace_back(link);
-        }
+        void bindLink(Link::Ptr link);
+        void unBindLink(size_t id);
+        void unBindLink(Link::Ptr link);
 
-        bool connected() const { return !_links.empty(); }
+        bool connected() const;
     };
 }
