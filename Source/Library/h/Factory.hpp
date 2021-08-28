@@ -10,6 +10,7 @@ namespace sd
     {
     private:
         Net _net;
+
     public:
         void load(const std::filesystem::path &file);
 

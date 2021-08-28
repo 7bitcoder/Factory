@@ -12,6 +12,26 @@ namespace sd
 {
     class Net
     {
+    public:
+        enum QueueType
+        {
+            LIFO,
+            FIFO
+        };
+
+        enum NodeType
+        {
+            RAMP,
+            WORKER,
+            STORE
+        };
+
+        struct LinkBind
+        {
+            size_t id;
+            NodeType type;
+        };
+
     private:
         std::unordered_map<size_t, LoadingRamp::Ptr> _loadingRamps;
         std::unordered_map<size_t, Worker::Ptr> _workers;
@@ -20,5 +40,11 @@ namespace sd
 
     public:
         void build();
+
+        void addWorker(size_t id, size_t processingTime, QueueType queueType);
+        void addLoadingRamp(size_t id, size_t deliveryInterval);
+        void addStorehause(size_t id);
+
+        void addLink(LinkBind source, LinkBind sink, double probability);
     };
 }
