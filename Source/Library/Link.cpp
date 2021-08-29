@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <format>
+#include <sstream>
 
 #include "Link.hpp"
 #include "Node.hpp"
@@ -18,10 +20,28 @@ namespace sd
 
     double Random::nextDouble() { return _distr(_eng); }
 
-    Link::Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
-        : Identifiable(id), _baseProbability(probability), _source(source), _sink(sink)
+    size_t Link::_idSeed = 0;
+
+    Link::Link(double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
+        : Identifiable(_idSeed++), _baseProbability(probability), _source(source), _sink(sink)
     {
         _probability = _baseProbability;
+    }
+
+    Link::~Link()
+    {
+        if (auto source = _source.lock())
+        {
+            source->getSourceLinksHub().unBindLink(shared_from_this());
+        }
+        _sink->getSinkLinksHub().unBindLink(shared_from_this());
+    }
+
+    void Link::bindLinks()
+    {
+        auto source = _source.lock();
+        source->getSourceLinksHub().bindLink(shared_from_this());
+        _sink->getSinkLinksHub().bindLink(shared_from_this());
     }
 
     void Link::passProduct(Product::Ptr &&product) { _sink->moveInProduct(std::move(product)); }
@@ -31,6 +51,12 @@ namespace sd
     double Link::getBaseProbability() const { return _baseProbability; }
 
     void Link::setProbability(double newProbability) { _probability = newProbability; }
+
+    std::string Link::getStructureRaport(size_t offset) { return std::format("{}{} (p = {})", getOffset(offset), _sink->toString(), getProbability()); }
+
+    std::string Link::getStructure() { return std::format("LINK scr={} dest={} p={})", getOffset(offset), _sink->toString(), getProbability()); }
+
+    std::shared_ptr<SinkNode> Link::getSink() const { return _sink; }
 
     void SourceLinksHub::bindLink(Link::Ptr link)
     {
@@ -64,6 +90,8 @@ namespace sd
 
     bool SourceLinksHub::connected() const { return !_links.empty(); }
 
+    const std::vector<Link::Ptr> &SourceLinksHub::getLinks() const { return _links; }
+
     Link::Ptr SourceLinksHub::getRandomLink() const
     {
         if (_links.empty())
@@ -96,6 +124,17 @@ namespace sd
             auto baseProbability = link->getBaseProbability();
             link->setProbability(baseProbability / totalPropability);
         }
+    }
+
+    std::string SourceLinksHub::getStructureRaport(size_t offset)
+    {
+        std::stringstream out;
+        out << getOffset(offset++) << "Receivers:" << std::endl;
+        for (auto &link : getLinks())
+        {
+            out << link->getStructureRaport(offset);
+        }
+        return out.str();
     }
 
     void SinkLinksHub::bindLink(Link::Ptr link) { _links.emplace_back(link); }
