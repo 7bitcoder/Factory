@@ -1,5 +1,7 @@
 #pragma once
 
+#include <sstream>
+
 #include "Node.hpp"
 
 namespace sd
@@ -8,7 +10,9 @@ namespace sd
 
     SourceNode::SourceNode(size_t id, size_t processTime) : Node(id), _processTime(processTime) {}
 
-    size_t SourceNode::getProcessTime() const { return _processTime; }
+    size_t SourceNode::getProcesingTime() const { return _processTime; }
+
+    size_t SourceNode::getCurrentProcesingTime() const { return _currentProcessTime; }
 
     void SourceNode::process(const size_t currentTime)
     {
@@ -56,5 +60,19 @@ namespace sd
             _storedProducts.pop_back();
         }
         return std::move(result);
+    }
+
+    std::string SinkNode::getSinkRaport() const
+    {
+        std::stringstream out;
+        for (auto &product : _storedProducts)
+        {
+            out << product->toString();
+            if (product != _storedProducts.back())
+            {
+                out << ", ";
+            }
+        }
+        return out.str();
     }
 }

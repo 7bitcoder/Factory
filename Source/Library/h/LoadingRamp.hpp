@@ -14,7 +14,11 @@ namespace sd
         LoadingRamp(size_t id, size_t deliveryInterval = 1);
 
         Product::Ptr moveOutProduct() final;
+        
+        std::string getStructureRaport(size_t offset) final;
 
         Product::Ptr createProduct();
+
+        std::string toString() final;
     };
 }

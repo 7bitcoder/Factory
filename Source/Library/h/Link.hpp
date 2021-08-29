@@ -1,8 +1,10 @@
 #pragma once
+
 #include <random>
 #include <iomanip>
 #include <vector>
 
+#include "Interfaces.hpp"
 #include "Identifiable.hpp"
 #include "Product.hpp"
 
@@ -26,9 +28,14 @@ namespace sd
         double nextDouble();
     };
 
-    class Link : public Identifiable
+    class Link final
+        : public Identifiable,
+          public StructureRaportable,
+          public Structure,
+          public std::enable_shared_from_this<Link>
     {
     private:
+        static size_t _idSeed;
         double _probability;
         const double _baseProbability;
         std::weak_ptr<SourceNode> _source;
@@ -38,7 +45,10 @@ namespace sd
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
-        Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+        Link(double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+        ~Link();
+
+        void bindLinks();
 
         void passProduct(Product::Ptr &&product);
 
@@ -47,9 +57,15 @@ namespace sd
         double getProbability() const;
 
         void setProbability(double newProbability);
+
+        std::string getStructureRaport(size_t offset) final;
+
+        std::string getStructure() final;
+
+        std::shared_ptr<SinkNode> getSink() const;
     };
 
-    class SourceLinksHub
+    class SourceLinksHub : public StructureRaportable
     {
     private:
         std::vector<Link::Ptr> _links;
@@ -62,6 +78,10 @@ namespace sd
         void passProduct(Product::Ptr &&product);
 
         bool connected() const;
+
+        std::string getStructureRaport(size_t offset) final;
+
+        const std::vector<Link::Ptr> &getLinks() const;
 
     private:
         void normalize();

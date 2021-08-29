@@ -14,5 +14,11 @@ namespace sd
         using Ptr = std::shared_ptr<StoreHause>;
 
         StoreHause(size_t id);
+
+        std::string getStructureRaport(size_t offset) final;
+
+        std::string getStateRaport(size_t offset) final;
+
+        std::string toString() final;
     };
 }

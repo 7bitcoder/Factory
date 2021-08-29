@@ -1,4 +1,7 @@
 #pragma once
+
+#include <format>
+
 #include "Product.hpp"
 
 namespace sd
@@ -7,4 +10,5 @@ namespace sd
 
     Product::Product() : Identifiable(_idSeed++) {}
 
+    std::string Product::toString() { return std::format("#{}", getId()); }
 }

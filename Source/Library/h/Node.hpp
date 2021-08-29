@@ -2,6 +2,7 @@
 #include <memory>
 #include <deque>
 
+#include "Interfaces.hpp"
 #include "Identifiable.hpp"
 #include "Product.hpp"
 #include "Link.hpp"
@@ -18,14 +19,17 @@ namespace sd
         virtual void moveInProduct(Product::Ptr &&product) = 0;
     };
 
-    class Node : public Identifiable
+    class Node : public Identifiable, public ToString
     {
     public:
         using Ptr = std::shared_ptr<Node>;
         Node(size_t id);
     };
 
-    class SourceNode : public Node, public ProductSource
+    class SourceNode
+        : virtual public Node,
+          virtual public StructureRaportable,
+          public ProductSource
     {
     public:
         using Ptr = std::shared_ptr<SourceNode>;
@@ -45,7 +49,8 @@ namespace sd
         SourceNode &operator=(const SourceNode &) = delete;
         SourceNode &operator=(SourceNode &&) = delete;
 
-        size_t getProcessTime() const;
+        size_t getProcesingTime() const;
+        size_t getCurrentProcesingTime() const;
 
         void process(const size_t currentTime);
 
@@ -54,7 +59,11 @@ namespace sd
         SourceLinksHub &getSourceLinksHub();
     };
 
-    class SinkNode : public Node, public ProductSink
+    class SinkNode
+        : virtual public Node,
+          virtual public StructureRaportable,
+          public StateRaportable,
+          public ProductSink
     {
     public:
         using Ptr = std::shared_ptr<SinkNode>;
@@ -76,6 +85,8 @@ namespace sd
 
         SinkLinksHub &getSinkLinksHub();
 
+        std::string getSinkRaport() const;
+        
         bool areProductsAvailable() const;
 
         Product::Ptr getProduct(bool first = false);

@@ -5,5 +5,6 @@
 int main(int, char **)
 {
     sd::Factory f;
-    f.build();
+    f.load("factory.txt");
+    f.run();
 }

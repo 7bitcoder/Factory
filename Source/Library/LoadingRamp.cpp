@@ -1,11 +1,14 @@
 #pragma once
 
+#include <sstream>
+#include <format>
+
 #include "LoadingRamp.hpp"
 
 namespace sd
 {
     LoadingRamp::LoadingRamp(size_t id, size_t deliveryInterval)
-        : SourceNode(id, deliveryInterval) {}
+        : SourceNode(id, deliveryInterval), Node(id) {}
 
     Product::Ptr LoadingRamp::moveOutProduct()
     {
@@ -16,4 +19,15 @@ namespace sd
     {
         return std::make_unique<Product>();
     }
+
+    std::string LoadingRamp::getStructureRaport(size_t offset)
+    {
+        std::stringstream out;
+        out << getOffset(offset++) << toString() << std::endl;
+        out << getOffset(offset) << "Delivery interval: " << getProcesingTime() << std::endl;
+        out << getSourceLinksHub().getStructureRaport(offset);
+        return out.str();
+    }
+
+    std::string LoadingRamp::toString() { return std::format("LOADING RAMP #{}", getId()); }
 }

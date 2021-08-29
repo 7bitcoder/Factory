@@ -25,5 +25,16 @@ namespace sd
         Product::Ptr moveOutProduct() final;
 
         void moveInProduct(Product::Ptr &&product) final;
+
+        std::string getStructureRaport(size_t offset) final;
+
+        std::string getStateRaport(size_t offset) final;
+        
+        std::string getCurrentWorkRaport();
+
+        std::string toString() final;
+
+    private:
+        std::string queueTypeAsStr() const;
     };
 }
