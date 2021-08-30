@@ -19,7 +19,11 @@ namespace sd
         virtual void moveInProduct(Product::Ptr &&product) = 0;
     };
 
-    class Node : public Identifiable, public ToString
+    class Node
+        : public Identifiable,
+          public Structure,
+          public ToString,
+          public Type
     {
     public:
         using Ptr = std::shared_ptr<Node>;
@@ -86,7 +90,7 @@ namespace sd
         SinkLinksHub &getSinkLinksHub();
 
         std::string getSinkRaport() const;
-        
+
         bool areProductsAvailable() const;
 
         Product::Ptr getProduct(bool first = false);

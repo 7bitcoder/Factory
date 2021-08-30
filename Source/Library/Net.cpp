@@ -4,6 +4,20 @@
 
 namespace sd
 {
+    namespace
+    {
+        struct dEnd
+        {
+        };
+
+        std::ostream &operator<<(std::ostream &out, const dEnd &t)
+        {
+            out << std::endl
+                << std::endl;
+            return out;
+        }
+    }
+
     Net::RaportInfo::RaportInfo(size_t interval) : _raportTimes(interval)
     {
         if (interval == 0)
@@ -58,9 +72,8 @@ namespace sd
         addLoadingRamp(1, 1);
         addWorker(1, 1, QueueType::FIFO);
         addStorehause(1);
-        addLink( 1, {1, NodeType::RAMP}, {1, NodeType::WORKER});
-        addLink( 1, {1, NodeType::WORKER}, {1, NodeType::STORE});
-
+        addLink(1, {1, NodeType::RAMP}, {1, NodeType::WORKER});
+        addLink(1, {1, NodeType::WORKER}, {1, NodeType::STORE});
     }
 
     void Net::addWorker(size_t id, size_t processingTime, QueueType queueType)
@@ -191,19 +204,17 @@ namespace sd
     std::string Net::generateStateRaport()
     {
         std::stringstream out;
-        out << "== WORKERS ==" << std::endl
-            << std::endl;
+        out << "== WORKERS ==" << dEnd{};
         for (auto &workerPair : _workers)
         {
             auto &worker = workerPair.second;
-            out << worker->getStateRaport(0) << std::endl;
+            out << worker->getStateRaport(0) << dEnd{};
         }
-        out << "== STOREHOUSES ==" << std::endl
-            << std::endl;
+        out << "== STOREHOUSES ==" << dEnd{};
         for (auto &storeHausePair : _storeHauses)
         {
             auto &store = storeHausePair.second;
-            out << store->getStateRaport(0) << std::endl;
+            out << store->getStateRaport(0) << dEnd{};
         }
         return out.str();
     }
@@ -211,26 +222,53 @@ namespace sd
     std::string Net::generateStructureRaport()
     {
         std::stringstream out;
-        out << "== LOADING RAMPS ==" << std::endl
-            << std::endl;
+        out << "== LOADING RAMPS ==" << dEnd{};
         for (auto &rampPair : _loadingRamps)
         {
             auto &ramp = rampPair.second;
-            out << ramp->getStructureRaport(0) << std::endl;
+            out << ramp->getStructureRaport(0) << dEnd{};
         }
-        out << "== WORKERS ==" << std::endl
-            << std::endl;
+        out << "== WORKERS ==" << dEnd{};
         for (auto &workerPair : _workers)
         {
             auto &worker = workerPair.second;
-            out << worker->getStructureRaport(0) << std::endl;
+            out << worker->getStructureRaport(0) << dEnd{};
         }
-        out << "== STOREHOUSES ==" << std::endl
-            << std::endl;
+        out << "== STOREHOUSES ==" << dEnd{};
         for (auto &storeHausePair : _storeHauses)
         {
             auto &store = storeHausePair.second;
-            out << store->getStructureRaport(0) << std::endl;
+            out << store->getStructureRaport(0) << dEnd{};
+        }
+        return out.str();
+    }
+
+    std::string Net::getStructure()
+    {
+        std::stringstream out;
+        out << "; == LOADING RAMPS ==" << dEnd{};
+        for (auto &rampPair : _loadingRamps)
+        {
+            auto &ramp = rampPair.second;
+            out << ramp->getStructure() << dEnd{};
+        }
+        out << "; == WORKERS ==" << dEnd{};
+        for (auto &workerPair : _workers)
+        {
+            auto &worker = workerPair.second;
+            out << worker->getStructure() << dEnd{};
+        }
+        out << "; == STOREHOUSES ==" << dEnd{};
+        for (auto &storeHausePair : _storeHauses)
+        {
+            auto &store = storeHausePair.second;
+            out << store->getStructure() << dEnd{};
+        }
+
+        out << "; == LINKS ==" << dEnd{};
+        for (auto &link : _links)
+        {
+            out << link->getStructure() << dEnd{};
         }
         return out.str();
     }

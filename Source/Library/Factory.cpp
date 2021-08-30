@@ -98,11 +98,11 @@ namespace sd
 
                 if (splitted[0].ends_with("ramp"))
                 {
-                    source.type = Net::NodeType::RAMP;
+                    source.type = NodeType::RAMP;
                 }
                 else if (splitted[0].ends_with("worker"))
                 {
-                    source.type = Net::NodeType::WORKER;
+                    source.type = NodeType::WORKER;
                 }
                 else
                 {
@@ -121,11 +121,11 @@ namespace sd
 
                 else if (splitted[0].ends_with("store"))
                 {
-                    sink.type = Net::NodeType::STORE;
+                    sink.type = NodeType::STORE;
                 }
                 else if (splitted[0].ends_with("worker"))
                 {
-                    sink.type = Net::NodeType::WORKER;
+                    sink.type = NodeType::WORKER;
                 }
                 else
                 {
@@ -363,6 +363,7 @@ namespace sd
         }
         std::ifstream file(filePath);
         loadNet(file);
+        std::cout << _net.getStructure();
     }
 
     void Factory::build()

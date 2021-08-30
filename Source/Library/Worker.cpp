@@ -57,6 +57,8 @@ namespace sd
         return _currentProduct ? std::format("{} (pt = {}), ", _currentProduct->toString(), getCurrentProcesingTime()) : "";
     };
 
+    std::string Worker::getStructure() { return std::format("WORKER id={} processing-time={} queue-type={}", getId(), getProcesingTime(), queueTypeAsStr()); }
+
     std::string Worker::toString() { return std::format("WORKER #{}", getId()); }
 
 }

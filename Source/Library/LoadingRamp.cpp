@@ -29,5 +29,7 @@ namespace sd
         return out.str();
     }
 
-    std::string LoadingRamp::toString() { return std::format("LOADING RAMP #{}", getId()); }
+    std::string LoadingRamp::getStructure() { return std::format("LOADING_RAMP id={} delivery-interval={}", getId(), getProcesingTime()); }
+
+    std::string LoadingRamp::toString() { return std::format("LOADING_RAMP #{}", getId()); }
 }

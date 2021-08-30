@@ -23,6 +23,8 @@ namespace sd
         out << getOffset(++offset) << "Queue: " << getSinkRaport() << std::endl;
         return out.str();
     };
+    
+    std::string StoreHause::getStructure() { return std::format("STOREHOUSE id={}", getId()); }
 
     std::string StoreHause::toString() { return std::format("STOREHOUSE #{}", getId()); }
 }

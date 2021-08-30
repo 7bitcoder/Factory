@@ -20,5 +20,8 @@ namespace sd
         std::string getStateRaport(size_t offset) final;
 
         std::string toString() final;
+        std::string getStructure() final;
+
+        NodeType getNodeType() final { return NodeType::STORE; }
     };
 }

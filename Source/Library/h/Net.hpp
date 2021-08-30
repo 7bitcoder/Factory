@@ -20,13 +20,6 @@ namespace sd
             FIFO
         };
 
-        enum NodeType
-        {
-            RAMP,
-            WORKER,
-            STORE
-        };
-
         struct LinkBind
         {
             size_t id;
@@ -63,6 +56,7 @@ namespace sd
         
         std::string generateStateRaport();
         std::string generateStructureRaport();
+        std::string getStructure();
 
         void addWorker(size_t id, size_t processingTime, QueueType queueType);
         void addLoadingRamp(size_t id, size_t deliveryInterval);

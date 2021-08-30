@@ -29,10 +29,13 @@ namespace sd
         std::string getStructureRaport(size_t offset) final;
 
         std::string getStateRaport(size_t offset) final;
-        
+
         std::string getCurrentWorkRaport();
 
         std::string toString() final;
+        std::string getStructure() final;
+
+        NodeType getNodeType() final { return NodeType::WORKER; }
 
     private:
         std::string queueTypeAsStr() const;

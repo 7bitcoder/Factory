@@ -4,9 +4,21 @@
 
 namespace sd
 {
+    enum NodeType
+    {
+        RAMP,
+        WORKER,
+        STORE
+    };
+
     struct ToString
     {
         virtual std::string toString() = 0;
+    };
+
+    struct Type
+    {
+        virtual NodeType getNodeType() = 0;
     };
 
     struct Structure
@@ -25,4 +37,19 @@ namespace sd
     };
 
     inline std::string getOffset(size_t offset) { return std::string(offset, '\t'); }
+
+    inline std::string toString(NodeType type)
+    {
+        switch (type)
+        {
+        case NodeType::WORKER:
+            return "worker";
+        case NodeType::RAMP:
+            return "ramp";
+        case NodeType::STORE:
+            return "store";
+        default:
+            return "";
+        }
+    }
 }
