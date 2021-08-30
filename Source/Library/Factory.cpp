@@ -2,12 +2,28 @@
 #include <fstream>
 #include <format>
 
+#include "CLI11.hpp"
 #include "Factory.hpp"
 
 namespace sd
 {
     namespace
     {
+        // cli variable holders
+        // general/store
+        size_t id;
+        // worker
+        size_t processingTime;
+        Net::QueueType queueType;
+        // ramp
+        size_t deliveryInterval;
+        // link
+        double probability;
+        std::pair<size_t, NodeType> source;
+        std::pair<size_t, NodeType> destination;
+
+        bool runSimulation = false;
+
         std::vector<std::string> splitStr(const std::string &str, char splitChat)
         {
             std::vector<std::string> out;
@@ -21,13 +37,99 @@ namespace sd
         }
     }
 
+    void Factory::run()
+    {
+        load(_config.structureFile);
+        _net.validate();
+        std::string line;
+        while (!runSimulation && std::getline(std::cin, line))
+        {
+            try
+            {
+                _cli->parse(line);
+            }
+            catch (const CLI::ParseError &e)
+            {
+                _cli->exit(e);
+            }
+        }
+        _net.run(_config.maxIterations, std::cout, {_config.stateRaportTimings});
+    }
+
+    Factory::Factory(Configuration &&config) : _config(config)
+    {
+        _cli = std::make_unique<CLI::App>("CLI");
+        buildCli();
+    }
+
+    Factory::~Factory() {}
+
+    void Factory::buildCli()
+    {
+        auto addWorker = _cli->add_subcommand("add_worker");
+        addWorker->add_option("-i,--id", id)
+            ->required();
+        addWorker->add_option("-t,--processing-time", processingTime)
+            ->required();
+        addWorker->add_option("-q,--queue-type", queueType)
+            ->required();
+
+        addWorker->callback(
+            [this]()
+            {
+                _net.addWorker(id, processingTime, queueType);
+            });
+
+        auto addRamp = _cli->add_subcommand("add_loading_ramp")->alias("add_ramp");
+        addRamp->add_option("-i,--id", id)
+            ->required();
+        addRamp->add_option("-t,--delivery-interval", deliveryInterval)
+            ->required();
+
+        addRamp->callback(
+            [this]()
+            {
+                _net.addLoadingRamp(id, deliveryInterval);
+            });
+
+        auto addStore = _cli->add_subcommand("add_storehause")->alias("add_store");
+        addStore->add_option("-i,--id", id)
+            ->required();
+
+        addStore->callback(
+            [this]()
+            {
+                _net.addStorehause(id);
+            });
+
+        auto addLink = _cli->add_subcommand("add_link");
+        addLink->add_option("-i,--id", id)
+            ->required();
+        addLink->add_option("-s,--scr", source)
+            ->required();
+        addLink->add_option("-d,--dest", destination)
+            ->required();
+        addLink->add_option("-p,--probability", probability)
+            ->required();
+
+        addLink->callback(
+            [this]()
+            {
+                Net::LinkBind scr{source.first, source.second};
+                Net::LinkBind dest{destination.first, destination.second};
+                _net.addLink(id, probability, scr, dest);
+            });
+
+        _cli->add_subcommand("run")->callback([]()
+                                              { runSimulation = true; });
+    }
+
     void Factory::loadNet(std::istream &stream)
     {
         size_t lineCnt = 0;
         try
         {
-
-            for (std::string line; std::getline(stream, line);)
+            for (std::string line; std::getline(stream, line); ++lineCnt)
             {
                 if (line.empty() || line.front() == ';')
                 {
@@ -73,20 +175,32 @@ namespace sd
 
     void Factory::createLink(const std::vector<std::string> &input)
     {
-        if (input.size() != 4)
+        if (input.size() != 5)
         {
             throw std::runtime_error("Expected this line to fit this pattern: LINK src=ramp-1 dest=worker-1 p=1.0");
         }
 
+        size_t id = 0;
         double probability = 1.0;
         Net::LinkBind source, sink;
-        bool linkCheck = false, scrCheck = false, destCheck = false, pCheck = false;
+        bool linkCheck = false, scrCheck = false, destCheck = false, idCheck = false, pCheck = false;
         for (auto &word : input)
         {
             if (word == "LINK")
             {
                 linkCheck = true;
                 continue;
+            }
+            else if (word.starts_with("id="))
+            {
+                auto splitted = splitStr(word, '=');
+                if (splitted.size() != 2)
+                {
+                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<worker-id>", word));
+                }
+
+                id = std::stoi(splitted[1]);
+                idCheck = true;
             }
             else if (word.starts_with("src="))
             {
@@ -153,6 +267,10 @@ namespace sd
         {
             throw std::runtime_error("source not provided");
         }
+        if (!idCheck)
+        {
+            throw std::runtime_error("id not provided");
+        }
         if (!destCheck)
         {
             throw std::runtime_error("destination not provided");
@@ -161,7 +279,7 @@ namespace sd
         {
             throw std::runtime_error("probability not provided");
         }
-        _net.addLink(probability, source, sink);
+        _net.addLink(id, probability, source, sink);
     }
 
     void Factory::createWorker(const std::vector<std::string> &input)
@@ -357,6 +475,7 @@ namespace sd
 
     void Factory::load(const std::filesystem::path &filePath)
     {
+        auto curr = std::filesystem::current_path().string();
         if (!std::filesystem::exists(filePath))
         {
             throw std::runtime_error(std::format("File {}, does not exists", filePath.string()));
@@ -369,11 +488,5 @@ namespace sd
     void Factory::build()
     {
         _net.build();
-    }
-
-    void Factory::run()
-    {
-        _net.validate();
-        _net.run(100, std::cout, {2});
     }
 }

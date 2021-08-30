@@ -1,9 +1,26 @@
 #pragma once
 
 #include <string>
+#include <variant>
+#include <vector>
+
+namespace CLI
+{
+    class App;
+}
 
 namespace sd
 {
+    struct Configuration
+    {
+        std::string structureFile = "";
+        size_t maxIterations = 100;
+
+        std::variant<size_t, std::vector<size_t>> stateRaportTimings = size_t{0};
+        bool showStructureRaport = false;
+        std::string raportFile = "";
+    };
+
     enum NodeType
     {
         RAMP,

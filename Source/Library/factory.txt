@@ -7,9 +7,9 @@ WORKER id=2 processing-time=1 queue-type=LIFO
 ; == STOREHOUSES ==
 STOREHOUSE id=1
 ; == LINKS ==
-LINK src=ramp-1 dest=worker-1 p=1.0
-LINK src=ramp-2 dest=worker-1 p=0.3
-LINK src=ramp-2 dest=worker-2 p=0.7
-LINK src=worker-1 dest=worker-1 p=0.5
-LINK src=worker-1 dest=worker-2 p=0.5
-LINK src=worker-2 dest=store-1 p=1.0
+LINK id=1 src=ramp-1 dest=worker-1 p=1.0
+LINK id=2 src=ramp-2 dest=worker-1 p=0.3
+LINK id=3 src=ramp-2 dest=worker-2 p=0.7
+LINK id=4 src=worker-1 dest=worker-1 p=0.5
+LINK id=5 src=worker-1 dest=worker-2 p=0.5
+LINK id=6 src=worker-2 dest=store-1 p=1.0

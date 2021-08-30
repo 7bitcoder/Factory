@@ -20,21 +20,20 @@ namespace sd
 
     double Random::nextDouble() { return _distr(_eng); }
 
-    size_t Link::_idSeed = 0;
 
-    Link::Link(double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
-        : Identifiable(_idSeed++), _baseProbability(probability), _source(source), _sink(sink)
+    Link::Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
+        : Identifiable(id), _baseProbability(probability), _source(source), _sink(sink)
     {
         _probability = _baseProbability;
     }
 
     Link::~Link()
     {
-        if (auto source = _source.lock())
-        {
-            source->getSourceLinksHub().unBindLink(shared_from_this());
-        }
-        _sink->getSinkLinksHub().unBindLink(shared_from_this());
+        //if (auto source = _source.lock())
+        //{
+        //    source->getSourceLinksHub().unBindLink(shared_from_this());
+        //}
+        //_sink->getSinkLinksHub().unBindLink(shared_from_this());
     }
 
     void Link::bindLinks()

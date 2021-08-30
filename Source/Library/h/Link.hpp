@@ -35,7 +35,6 @@ namespace sd
           public std::enable_shared_from_this<Link>
     {
     private:
-        static size_t _idSeed;
         double _probability;
         const double _baseProbability;
         std::weak_ptr<SourceNode> _source;
@@ -45,7 +44,7 @@ namespace sd
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
-        Link(double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+        Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
         ~Link();
 
         void bindLinks();

@@ -38,8 +38,7 @@ namespace sd
             std::variant<Interval, RaportTimes> _raportTimes;
 
         public:
-            RaportInfo(size_t interval);
-            RaportInfo(std::vector<size_t> &&raportTimes);
+            RaportInfo(std::variant<size_t, std::vector<size_t>> &var);
 
             bool isRaportTime(size_t currentIteration) const;
         };
@@ -48,12 +47,12 @@ namespace sd
         std::map<size_t, LoadingRamp::Ptr> _loadingRamps;
         std::map<size_t, Worker::Ptr> _workers;
         std::map<size_t, StoreHause::Ptr> _storeHauses;
-        std::vector<Link::Ptr> _links;
+        std::map<size_t, Link::Ptr> _links;
 
     public:
         void build();
         void run(size_t maxIterations, std::ostream &out, const RaportInfo &raportInfo);
-        
+
         std::string generateStateRaport();
         std::string generateStructureRaport();
         std::string getStructure();
@@ -62,7 +61,7 @@ namespace sd
         void addLoadingRamp(size_t id, size_t deliveryInterval);
         void addStorehause(size_t id);
 
-        void addLink(double probability, LinkBind source, LinkBind sink);
+        void addLink(size_t id, double probability, LinkBind source, LinkBind sink);
 
         void validate();
     };

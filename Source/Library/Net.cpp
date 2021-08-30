@@ -18,35 +18,39 @@ namespace sd
         }
     }
 
-    Net::RaportInfo::RaportInfo(size_t interval) : _raportTimes(interval)
+    Net::RaportInfo::RaportInfo(std::variant<size_t, std::vector<size_t>> &var)
     {
-        if (interval == 0)
+        if (size_t *intervalPtr = std::get_if<size_t>(&var))
         {
-            throw std::runtime_error("Raport Info Error: Interval time cannot be 0");
+            _raportTimes = *intervalPtr;
         }
-    }
-
-    Net::RaportInfo::RaportInfo(std::vector<size_t> &&raportTimes) : _raportTimes(RaportTimes{std::move(raportTimes), 0})
-    {
-
-        auto &raportTimesVar = std::get<RaportTimes>(_raportTimes);
-        auto &raportTimesVec = raportTimesVar.raportTimes;
-
-        if (raportTimesVec.empty())
+        else if (std::vector<size_t> *raportTimesPtr = std::get_if<std::vector<size_t>>(&var))
         {
-            throw std::runtime_error("Raport Times vector cannot be empty");
+            auto &raportTimes = *raportTimesPtr;
+            _raportTimes = RaportTimes{std::move(raportTimes), 0};
+
+            auto &raportTimesVar = std::get<RaportTimes>(_raportTimes);
+            auto &raportTimesVec = raportTimesVar.raportTimes;
+
+            if (raportTimesVec.empty())
+            {
+                throw std::runtime_error("Raport Times vector cannot be empty");
+            }
+
+            std::sort(raportTimesVec.begin(), raportTimesVec.end());
+
+            auto last = std::unique(raportTimesVec.begin(), raportTimesVec.end());
+            raportTimesVec.erase(last, raportTimesVec.end());
         }
-
-        std::sort(raportTimesVec.begin(), raportTimesVec.end());
-
-        auto last = std::unique(raportTimesVec.begin(), raportTimesVec.end());
-        raportTimesVec.erase(last, raportTimesVec.end());
     }
 
     bool Net::RaportInfo::isRaportTime(size_t currentIteration) const
     {
         if (const Interval *interval = std::get_if<Interval>(&_raportTimes))
         {
+            if(*interval == 0) {
+                return false;
+            }
             return currentIteration % *interval;
         }
         else if (const RaportTimes *raportTimesPtr = std::get_if<RaportTimes>(&_raportTimes))
@@ -72,8 +76,8 @@ namespace sd
         addLoadingRamp(1, 1);
         addWorker(1, 1, QueueType::FIFO);
         addStorehause(1);
-        addLink(1, {1, NodeType::RAMP}, {1, NodeType::WORKER});
-        addLink(1, {1, NodeType::WORKER}, {1, NodeType::STORE});
+        addLink(1, 1, {1, NodeType::RAMP}, {1, NodeType::WORKER});
+        addLink(2, 1, {1, NodeType::WORKER}, {1, NodeType::STORE});
     }
 
     void Net::addWorker(size_t id, size_t processingTime, QueueType queueType)
@@ -104,7 +108,7 @@ namespace sd
         }
     }
 
-    void Net::addLink(double probability, LinkBind source, LinkBind sink)
+    void Net::addLink(size_t id, double probability, LinkBind source, LinkBind sink)
     {
         SourceNode::Ptr sourceNode;
         SinkNode::Ptr sinkNode;
@@ -163,8 +167,12 @@ namespace sd
             }
         }
 
-        _links.push_back(std::make_shared<Link>(probability, sourceNode, sinkNode));
-        _links.back()->bindLinks();
+        auto res = _links.emplace(id, std::make_shared<Link>(id, probability, sourceNode, sinkNode));
+        if (!res.second)
+        {
+            throw std::runtime_error(std::format("Worker of id {} was already created.", id));
+        }
+        res.first->second->bindLinks();
     }
 
     void Net::validate()
@@ -266,8 +274,9 @@ namespace sd
         }
 
         out << "; == LINKS ==" << dEnd{};
-        for (auto &link : _links)
+        for (auto &linkPair : _links)
         {
+            auto &link = linkPair.second;
             out << link->getStructure() << dEnd{};
         }
         return out.str();
@@ -287,12 +296,6 @@ namespace sd
                 ramp.second->process(time);
             }
 
-            if (raportInfo.isRaportTime(time - 1))
-            {
-                out << generateStateRaport();
-                int g;
-                std::cin >> g;
-            }
         }
     }
 }
