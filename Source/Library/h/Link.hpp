@@ -15,6 +15,20 @@ namespace sd
     class Worker;
     class StoreHause;
 
+    struct LinkBind
+    {
+        size_t id;
+        NodeType type;
+    };
+
+    struct LinkData
+    {
+        size_t id;
+        double probability;
+        LinkBind source;
+        LinkBind sink;
+    };
+
     class Random
     {
     private:
@@ -45,6 +59,9 @@ namespace sd
         using WeakPtr = std::weak_ptr<Link>;
 
         Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+
+        Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+
         ~Link();
 
         void bindLinks();

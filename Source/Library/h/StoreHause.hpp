@@ -7,6 +7,11 @@
 
 namespace sd
 {
+    struct StoreHauseData
+    {
+        size_t id;
+    };
+
     class StoreHause : public SinkNode
     {
     private:
@@ -14,6 +19,8 @@ namespace sd
         using Ptr = std::shared_ptr<StoreHause>;
 
         StoreHause(size_t id);
+
+        StoreHause(const StoreHauseData& data);
 
         std::string getStructureRaport(size_t offset) final;
 

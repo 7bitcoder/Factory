@@ -6,12 +6,21 @@
 
 namespace sd
 {
+
+    struct LoadingRampData
+    {
+        size_t id;
+        size_t deliveryInterval;
+    };
+
     class LoadingRamp final : public SourceNode
     {
     public:
         using Ptr = std::shared_ptr<LoadingRamp>;
 
         LoadingRamp(size_t id, size_t deliveryInterval = 1);
+
+        LoadingRamp(const LoadingRampData &data);
 
         Product::Ptr moveOutProduct() final;
 

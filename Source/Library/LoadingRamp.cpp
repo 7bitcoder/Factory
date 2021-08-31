@@ -10,6 +10,9 @@ namespace sd
     LoadingRamp::LoadingRamp(size_t id, size_t deliveryInterval)
         : SourceNode(id, deliveryInterval), Node(id) {}
 
+    LoadingRamp::LoadingRamp(const LoadingRampData &data)
+        : SourceNode(data.id, data.deliveryInterval), Node(data.id) {}
+
     Product::Ptr LoadingRamp::moveOutProduct()
     {
         return std::move(createProduct());

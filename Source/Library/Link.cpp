@@ -20,12 +20,11 @@ namespace sd
 
     double Random::nextDouble() { return _distr(_eng); }
 
-
     Link::Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
-        : Identifiable(id), _baseProbability(probability), _source(source), _sink(sink)
-    {
-        _probability = _baseProbability;
-    }
+        : Identifiable(id), _baseProbability(probability), _probability(probability), _source(source), _sink(sink) {}
+
+    Link::Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
+        : Identifiable(data.id), _baseProbability(data.probability), _probability(data.probability), _source(source), _sink(sink) {}
 
     Link::~Link()
     {
@@ -53,7 +52,7 @@ namespace sd
 
     std::string Link::getStructureRaport(size_t offset) { return std::format("{}{} (p = {})", getOffset(offset), _sink->toString(), getProbability()); }
 
-    std::string Link::getStructure() { return std::format("LINK scr={}-{} dest={}-{} p={})", toString(_source.lock()->getNodeType()), _source.lock()->getId(), toString(_sink->getNodeType()), _sink->getId(), getProbability()); }
+    std::string Link::getStructure() { return std::format("LINK id={} src={}-{} dest={}-{} p={})", getId(), toString(_source.lock()->getNodeType()), _source.lock()->getId(), toString(_sink->getNodeType()), _sink->getId(), getProbability()); }
 
     std::shared_ptr<SinkNode> Link::getSink() const { return _sink; }
 
@@ -129,9 +128,14 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset++) << "Receivers:" << std::endl;
-        for (auto &link : getLinks())
+        auto &links = getLinks();
+        for (auto &link : links)
         {
             out << link->getStructureRaport(offset);
+            if (link != links.back())
+            {
+                out << std::endl;
+            }
         }
         return out.str();
     }

@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "CommandParser.hpp"
-#include "Factory.hpp"
+#include "Controller.hpp"
 
 int main(int argc, char **argv)
 {
@@ -11,8 +11,8 @@ int main(int argc, char **argv)
         sd::CommandParser parser;
         if (parser.parse(argc, argv))
         {
-            sd::Factory f{parser.getResults()};
-            f.run();
+            sd::Controller c{parser.getResults()};
+            c.run();
         }
     }
     catch (std::exception &e)

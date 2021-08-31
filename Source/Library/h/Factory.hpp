@@ -1,34 +1,57 @@
 #pragma once
 #include <iostream>
 #include <filesystem>
+#include <map>
+#include <variant>
 
-#include "Net.hpp"
-#include "Interfaces.hpp"
+#include "Link.hpp"
+#include "Worker.hpp"
+#include "LoadingRamp.hpp"
+#include "StoreHause.hpp"
 
 namespace sd
 {
     class Factory
     {
+    public:
+        class RaportGuard
+        {
+        private:
+            using Interval = size_t;
+            struct RaportTimes
+            {
+                std::vector<size_t> raportTimes;
+                mutable size_t nextRaportIndex;
+            };
+            std::variant<Interval, RaportTimes> _raportTimes;
+        public:
+            RaportGuard(std::variant<size_t, std::vector<size_t>> &var);
+
+            bool isRaportTime(size_t currentIteration) const;
+        };
+
     private:
-        Configuration _config;
-        Net _net;
-        std::unique_ptr<CLI::App> _cli;
+        std::map<size_t, LoadingRamp::Ptr> _loadingRamps;
+        std::map<size_t, Worker::Ptr> _workers;
+        std::map<size_t, StoreHause::Ptr> _storeHauses;
+        std::map<size_t, Link::Ptr> _links;
 
     public:
-        Factory(Configuration && config);
-        ~Factory();
+        using Ptr = std::unique_ptr<Factory>;
+        static Factory::Ptr fromStream(std::istream &in);
 
-        void load(const std::filesystem::path &file);
-        
-        void run();
+        void run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportInfo);
 
-        void build();
-    private:
-        void buildCli();
-        void loadNet(std::istream& str);
-        void createLink(const std::vector<std::string>& input);
-        void createWorker(const std::vector<std::string>& input);
-        void createLoadingRamp(const std::vector<std::string>& input);
-        void createStoreHause(const std::vector<std::string>& input);
+        std::string generateStateRaport();
+        std::string generateStructureRaport();
+        std::string getStructure();
+
+        void addWorker(const WorkerData &data);
+        void addLoadingRamp(const LoadingRampData &data);
+        void addStorehause(const StoreHauseData &data);
+        void addLink(const LinkData &data);
+
+        bool empty();
+        void validate();
     };
 }

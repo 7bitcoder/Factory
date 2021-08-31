@@ -8,6 +8,8 @@
 namespace sd
 {
     StoreHause::StoreHause(size_t id) : SinkNode(id), Node(id) {}
+    
+    StoreHause::StoreHause(const StoreHauseData& data) : SinkNode(data.id), Node(data.id) {}
 
     std::string StoreHause::getStructureRaport(size_t offset)
     {

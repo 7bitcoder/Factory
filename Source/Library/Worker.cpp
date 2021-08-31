@@ -10,6 +10,9 @@ namespace sd
     Worker::Worker(size_t id, WorkerType type, size_t processingTime)
         : SourceNode(id, processingTime), SinkNode(id), _type(type), Node(id) {}
 
+    Worker::Worker(const WorkerData &data)
+        : SourceNode(data.id, data.processingTime), SinkNode(data.id), _type(data.type), Node(data.id) {}
+
     Product::Ptr Worker::moveOutProduct()
     {
         auto ptr = std::move(_currentProduct);

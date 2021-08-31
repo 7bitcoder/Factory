@@ -1,134 +1,84 @@
-#include <iostream>
-#include <fstream>
 #include <format>
 
-#include "CLI11.hpp"
 #include "Factory.hpp"
+#include "HelperClasses.hpp"
 
 namespace sd
 {
     namespace
     {
-        // cli variable holders
-        // general/store
-        size_t id;
-        // worker
-        size_t processingTime;
-        Net::QueueType queueType;
-        // ramp
-        size_t deliveryInterval;
-        // link
-        double probability;
-        std::pair<size_t, NodeType> source;
-        std::pair<size_t, NodeType> destination;
-
-        bool runSimulation = false;
-
-        std::vector<std::string> splitStr(const std::string &str, char splitChat)
+        struct dEnd
         {
-            std::vector<std::string> out;
-            std::istringstream iss(str);
-            std::string s;
-            while (getline(iss, s, splitChat))
-            {
-                out.push_back(s);
-            }
+        };
+
+        std::ostream &operator<<(std::ostream &out, const dEnd &t)
+        {
+            out << std::endl
+                << std::endl;
             return out;
         }
     }
 
-    void Factory::run()
+    Factory::RaportGuard::RaportGuard(std::variant<size_t, std::vector<size_t>> &var)
     {
-        load(_config.structureFile);
-        _net.validate();
-        std::string line;
-        while (!runSimulation && std::getline(std::cin, line))
+        if (size_t *intervalPtr = std::get_if<size_t>(&var))
         {
-            try
+            _raportTimes = *intervalPtr;
+        }
+        else if (std::vector<size_t> *raportTimesPtr = std::get_if<std::vector<size_t>>(&var))
+        {
+            auto &raportTimes = *raportTimesPtr;
+            _raportTimes = RaportTimes{std::move(raportTimes), 0};
+
+            auto &raportTimesVar = std::get<RaportTimes>(_raportTimes);
+            auto &raportTimesVec = raportTimesVar.raportTimes;
+
+            if (raportTimesVec.empty())
             {
-                _cli->parse(line);
+                throw std::runtime_error("Raport Times vector cannot be empty");
             }
-            catch (const CLI::ParseError &e)
+
+            std::sort(raportTimesVec.begin(), raportTimesVec.end());
+
+            auto last = std::unique(raportTimesVec.begin(), raportTimesVec.end());
+            raportTimesVec.erase(last, raportTimesVec.end());
+        }
+    }
+
+    bool Factory::RaportGuard::isRaportTime(size_t currentIteration) const
+    {
+        if (const Interval *interval = std::get_if<Interval>(&_raportTimes))
+        {
+            if (*interval == 0)
             {
-                _cli->exit(e);
+                return false;
+            }
+            return (currentIteration % *interval) == 0;
+        }
+        else if (const RaportTimes *raportTimesPtr = std::get_if<RaportTimes>(&_raportTimes))
+        {
+            auto &raportTimes = *raportTimesPtr;
+            auto &raportTimesVector = raportTimes.raportTimes;
+            auto &nextRaportIndex = raportTimes.nextRaportIndex;
+            if (nextRaportIndex < raportTimesVector.size() && currentIteration == raportTimesVector.at(nextRaportIndex))
+            {
+                ++nextRaportIndex;
+                return true;
             }
         }
-        _net.run(_config.maxIterations, std::cout, {_config.stateRaportTimings});
+        else
+        {
+            throw std::runtime_error("Raport Info Error");
+        }
+        return false;
     }
 
-    Factory::Factory(Configuration &&config) : _config(config)
-    {
-        _cli = std::make_unique<CLI::App>("CLI");
-        buildCli();
-    }
-
-    Factory::~Factory() {}
-
-    void Factory::buildCli()
-    {
-        auto addWorker = _cli->add_subcommand("add_worker");
-        addWorker->add_option("-i,--id", id)
-            ->required();
-        addWorker->add_option("-t,--processing-time", processingTime)
-            ->required();
-        addWorker->add_option("-q,--queue-type", queueType)
-            ->required();
-
-        addWorker->callback(
-            [this]()
-            {
-                _net.addWorker(id, processingTime, queueType);
-            });
-
-        auto addRamp = _cli->add_subcommand("add_loading_ramp")->alias("add_ramp");
-        addRamp->add_option("-i,--id", id)
-            ->required();
-        addRamp->add_option("-t,--delivery-interval", deliveryInterval)
-            ->required();
-
-        addRamp->callback(
-            [this]()
-            {
-                _net.addLoadingRamp(id, deliveryInterval);
-            });
-
-        auto addStore = _cli->add_subcommand("add_storehause")->alias("add_store");
-        addStore->add_option("-i,--id", id)
-            ->required();
-
-        addStore->callback(
-            [this]()
-            {
-                _net.addStorehause(id);
-            });
-
-        auto addLink = _cli->add_subcommand("add_link");
-        addLink->add_option("-i,--id", id)
-            ->required();
-        addLink->add_option("-s,--scr", source)
-            ->required();
-        addLink->add_option("-d,--dest", destination)
-            ->required();
-        addLink->add_option("-p,--probability", probability)
-            ->required();
-
-        addLink->callback(
-            [this]()
-            {
-                Net::LinkBind scr{source.first, source.second};
-                Net::LinkBind dest{destination.first, destination.second};
-                _net.addLink(id, probability, scr, dest);
-            });
-
-        _cli->add_subcommand("run")->callback([]()
-                                              { runSimulation = true; });
-    }
-
-    void Factory::loadNet(std::istream &stream)
+    Factory::Ptr Factory::fromStream(std::istream &stream)
     {
         size_t lineCnt = 0;
         try
         {
+            auto ptr = std::make_unique<Factory>();
             for (std::string line; std::getline(stream, line); ++lineCnt)
             {
                 if (line.empty() || line.front() == ';')
@@ -143,25 +93,26 @@ namespace sd
                 }
                 if (splitted.front() == "WORKER")
                 {
-                    createWorker(splitted);
+                    ptr->addWorker(parseWorker(splitted));
                 }
                 else if (splitted.front() == "LOADING_RAMP")
                 {
-                    createLoadingRamp(splitted);
+                    ptr->addLoadingRamp(parseLoadingRamp(splitted));
                 }
                 else if (splitted.front() == "STOREHOUSE")
                 {
-                    createStoreHause(splitted);
+                    ptr->addStorehause(parseStoreHause(splitted));
                 }
                 else if (splitted.front() == "LINK")
                 {
-                    createLink(splitted);
+                    ptr->addLink(parseLink(splitted));
                 }
                 else
                 {
                     throw std::runtime_error("Expected word: WORKER | LOADING_RAMP | STOREHOUSE | LINK");
                 }
             }
+            return std::move(ptr);
         }
         catch (std::exception &e)
         {
@@ -171,322 +122,230 @@ namespace sd
         {
             std::cout << std::format("Unexpected error in line {}", lineCnt);
         }
+        return nullptr;
     }
 
-    void Factory::createLink(const std::vector<std::string> &input)
+    void Factory::addWorker(const WorkerData &data)
     {
-        if (input.size() != 5)
+        auto res = _workers.emplace(data.id, std::make_shared<Worker>(data));
+        if (!res.second)
         {
-            throw std::runtime_error("Expected this line to fit this pattern: LINK src=ramp-1 dest=worker-1 p=1.0");
+            throw std::runtime_error(std::format("Worker of id {} was already created.", data.id));
         }
+    }
 
-        size_t id = 0;
-        double probability = 1.0;
-        Net::LinkBind source, sink;
-        bool linkCheck = false, scrCheck = false, destCheck = false, idCheck = false, pCheck = false;
-        for (auto &word : input)
+    void Factory::addLoadingRamp(const LoadingRampData &data)
+    {
+        auto res = _loadingRamps.emplace(data.id, std::make_shared<LoadingRamp>(data));
+        if (!res.second)
         {
-            if (word == "LINK")
-            {
-                linkCheck = true;
-                continue;
-            }
-            else if (word.starts_with("id="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<worker-id>", word));
-                }
+            throw std::runtime_error(std::format("Loading ramp of id {} was already created.", data.id));
+        }
+    }
 
-                id = std::stoi(splitted[1]);
-                idCheck = true;
-            }
-            else if (word.starts_with("src="))
-            {
-                auto splitted = splitStr(word, '-');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: src=type-id, where type is one of ramp, worker and id is identifier", word));
-                }
+    void Factory::addStorehause(const StoreHauseData &data)
+    {
+        auto res = _storeHauses.emplace(data.id, std::make_shared<StoreHause>(data));
+        if (!res.second)
+        {
+            throw std::runtime_error(std::format("Storehause of id {} was already created.", data.id));
+        }
+    }
 
-                if (splitted[0].ends_with("ramp"))
-                {
-                    source.type = NodeType::RAMP;
-                }
-                else if (splitted[0].ends_with("worker"))
-                {
-                    source.type = NodeType::WORKER;
-                }
-                else
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: src=type-id, where type is one of ramp, worker and id is identifier", word));
-                }
-                source.id = std::stoi(splitted[1]);
-                scrCheck = true;
-            }
-            else if (word.starts_with("dest="))
-            {
-                auto splitted = splitStr(word, '-');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, where type is one of store, worker and id is identifier", word));
-                }
+    void Factory::addLink(const LinkData &data)
+    {
+        SourceNode::Ptr sourceNode;
+        SinkNode::Ptr sinkNode;
 
-                else if (splitted[0].ends_with("store"))
-                {
-                    sink.type = NodeType::STORE;
-                }
-                else if (splitted[0].ends_with("worker"))
-                {
-                    sink.type = NodeType::WORKER;
-                }
-                else
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, where type is one of store, worker and id is identifier", word));
-                }
-                sink.id = std::stoi(splitted[1]);
-                destCheck = true;
-            }
-            else if (word.starts_with("p"))
+        if (data.source.type == NodeType::STORE)
+        {
+            throw std::runtime_error(std::format("Storehause of id {} cannot be used as link source.", data.source.id));
+        }
+        if (data.source.type == NodeType::RAMP)
+        {
+            if (auto found = _loadingRamps.find(data.source.id); found != _loadingRamps.end())
             {
-                auto splitted = splitStr(word, '=');
-                probability = std::stod(splitted[1]);
-                pCheck = true;
+                sourceNode = found->second;
             }
             else
             {
-                throw std::runtime_error("Expected this line to fit this pattern: LINK src=ramp-1 dest=worker-1 p=1.0");
+                throw std::runtime_error(std::format("Could not find LoadingRamp of id {} to be link source ", data.source.id));
             }
         }
-        if (!linkCheck)
+        else // Worker
         {
-            throw std::runtime_error("LINK word not provided");
-        }
-        if (!scrCheck)
-        {
-            throw std::runtime_error("source not provided");
-        }
-        if (!idCheck)
-        {
-            throw std::runtime_error("id not provided");
-        }
-        if (!destCheck)
-        {
-            throw std::runtime_error("destination not provided");
-        }
-        if (!pCheck)
-        {
-            throw std::runtime_error("probability not provided");
-        }
-        _net.addLink(id, probability, source, sink);
-    }
-
-    void Factory::createWorker(const std::vector<std::string> &input)
-    {
-        if (input.size() != 4)
-        {
-            throw std::runtime_error("Expected this line to fit this pattern: LINK src=ramp-1 dest=worker-1 p=1.0");
-        }
-
-        size_t processingTime = 0;
-        size_t id = 0;
-        Net::QueueType type;
-
-        bool workerCheck = false, processCheck = false, idCheck = false, typeCheck = false;
-        for (auto &word : input)
-        {
-            if (word == "WORKER")
+            if (auto found = _workers.find(data.source.id); found != _workers.end())
             {
-                workerCheck = true;
-                continue;
-            }
-            else if (word.starts_with("processing-time="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: processing-time=<processing-time>", word));
-                }
-
-                processingTime = std::stoi(splitted[1]);
-                processCheck = true;
-            }
-            else if (word.starts_with("id="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<worker-id>", word));
-                }
-
-                id = std::stoi(splitted[1]);
-                idCheck = true;
-            }
-            else if (word.starts_with("queue-type="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
-                }
-
-                if (splitted[1] == "FIFO")
-                {
-                    type = Net::QueueType::FIFO;
-                }
-                else if (splitted[1] == "LIFO")
-                {
-                    type = Net::QueueType::LIFO;
-                }
-                else
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
-                }
-                typeCheck = true;
+                sourceNode = found->second;
             }
             else
             {
-                throw std::runtime_error("Expected this line to fit this pattern: WORKER id=<worker-id> processing-time=<processing-time> queue-type=<queuetype>");
+                throw std::runtime_error(std::format("Could not find Worker of id {} to be link source ", data.source.id));
             }
         }
-        if (!workerCheck)
-        {
-            throw std::runtime_error("Worker word not provided");
-        }
-        if (!processCheck)
-        {
-            throw std::runtime_error("processing-time not provided");
-        }
-        if (!idCheck)
-        {
-            throw std::runtime_error("id not provided");
-        }
-        if (!typeCheck)
-        {
-            throw std::runtime_error("queue-type not provided");
-        }
-        _net.addWorker(id, processingTime, type);
-    }
 
-    void Factory::createLoadingRamp(const std::vector<std::string> &input)
-    {
-        if (input.size() != 3)
+        if (data.sink.type == NodeType::RAMP)
         {
-            throw std::runtime_error("Expected this line to fit this pattern: LOADING_RAMP id=<ramp-id> delivery-interval=<delivery-interval>");
+            throw std::runtime_error(std::format("LoadingRamp of id {} cannot be used as link sink.", data.sink.id));
         }
-
-        size_t deliveryInterval = 0;
-        size_t id = 0;
-
-        bool loadingCheck = false, deliveryCheck = false, idCheck = false;
-        for (auto &word : input)
+        if (data.sink.type == NodeType::STORE)
         {
-            if (word == "LOADING_RAMP")
+            if (auto found = _storeHauses.find(data.sink.id); found != _storeHauses.end())
             {
-                loadingCheck = true;
-                continue;
-            }
-            else if (word.starts_with("delivery-interval="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: processing-time=<processing-time>", word));
-                }
-
-                deliveryInterval = std::stoi(splitted[1]);
-                deliveryCheck = true;
-            }
-            else if (word.starts_with("id="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<worker-id>", word));
-                }
-
-                id = std::stoi(splitted[1]);
-                idCheck = true;
+                sinkNode = found->second;
             }
             else
             {
-                throw std::runtime_error("Expected this line to fit this pattern: WORKER id=<worker-id> processing-time=<processing-time> queue-type=<queuetype>");
+                throw std::runtime_error(std::format("Could not find Storehause of id {} to be link sink.", data.sink.id));
             }
         }
-        if (!loadingCheck)
+        else // Worker
         {
-            throw std::runtime_error("Loading Ramp word not provided");
-        }
-        if (!deliveryCheck)
-        {
-            throw std::runtime_error("delivery-interval= not provided");
-        }
-        if (!idCheck)
-        {
-            throw std::runtime_error("id not provided");
-        }
-        _net.addLoadingRamp(id, deliveryInterval);
-    }
-
-    void Factory::createStoreHause(const std::vector<std::string> &input)
-    {
-        if (input.size() != 2)
-        {
-            throw std::runtime_error("Expected this line to fit this pattern: LOADING_RAMP id=<ramp-id> delivery-interval=<delivery-interval>");
-        }
-
-        size_t id = 0;
-
-        bool storeCheck = false, idCheck = false;
-        for (auto &word : input)
-        {
-            if (word == "STOREHOUSE")
+            if (auto found = _workers.find(data.sink.id); found != _workers.end())
             {
-                storeCheck = true;
-                continue;
-            }
-            else if (word.starts_with("id="))
-            {
-                auto splitted = splitStr(word, '=');
-                if (splitted.size() != 2)
-                {
-                    throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<worker-id>", word));
-                }
-
-                id = std::stoi(splitted[1]);
-                idCheck = true;
+                sinkNode = found->second;
             }
             else
             {
-                throw std::runtime_error("Expected this line to fit this pattern: WORKER id=<worker-id> processing-time=<processing-time> queue-type=<queuetype>");
+                throw std::runtime_error(std::format("Could not find Worker of id {} to be link sink.", data.source.id));
             }
         }
-        if (!storeCheck)
+
+        auto res = _links.emplace(data.id, std::make_shared<Link>(data, sourceNode, sinkNode));
+        if (!res.second)
         {
-            throw std::runtime_error("Loading Ramp word not provided");
+            throw std::runtime_error(std::format("Worker of id {} was already created.", data.id));
         }
-        if (!idCheck)
-        {
-            throw std::runtime_error("id not provided");
-        }
-        _net.addStorehause(id);
+        res.first->second->bindLinks();
     }
 
-    void Factory::load(const std::filesystem::path &filePath)
+    void Factory::validate()
     {
-        auto curr = std::filesystem::current_path().string();
-        if (!std::filesystem::exists(filePath))
+        for (auto &workerPair : _workers)
         {
-            throw std::runtime_error(std::format("File {}, does not exists", filePath.string()));
+            auto &worker = workerPair.second;
+            if (!worker->getSourceLinksHub().connected())
+            {
+                throw std::runtime_error(std::format("Worker of id {} is not connected as source.", worker->getId()));
+            }
+            if (!worker->getSinkLinksHub().connected())
+            {
+                throw std::runtime_error(std::format("Worker of id {} is not connected as sink.", worker->getId()));
+            }
         }
-        std::ifstream file(filePath);
-        loadNet(file);
-        std::cout << _net.getStructure();
+
+        for (auto &rampPair : _loadingRamps)
+        {
+            auto &ramp = rampPair.second;
+            if (!ramp->getSourceLinksHub().connected())
+            {
+                throw std::runtime_error(std::format("Ramp of id {} is not connected as source.", ramp->getId()));
+            }
+        }
+
+        for (auto &storeHausePair : _storeHauses)
+        {
+            auto &store = storeHausePair.second;
+            if (!store->getSinkLinksHub().connected())
+            {
+                throw std::runtime_error(std::format("StoreHause of id {} is not connected as sink.", store->getId()));
+            }
+        }
     }
 
-    void Factory::build()
+    std::string Factory::generateStateRaport()
     {
-        _net.build();
+        std::stringstream out;
+        out << "== WORKERS ==" << dEnd{};
+        for (auto &workerPair : _workers)
+        {
+            auto &worker = workerPair.second;
+            out << worker->getStateRaport(0) << dEnd{};
+        }
+        out << "== STOREHOUSES ==" << dEnd{};
+        for (auto &storeHausePair : _storeHauses)
+        {
+            auto &store = storeHausePair.second;
+            out << store->getStateRaport(0) << dEnd{};
+        }
+        return out.str();
+    }
+
+    std::string Factory::generateStructureRaport()
+    {
+        std::stringstream out;
+        out << "== LOADING RAMPS ==" << dEnd{};
+        for (auto &rampPair : _loadingRamps)
+        {
+            auto &ramp = rampPair.second;
+            out << ramp->getStructureRaport(0) << dEnd{};
+        }
+        out << "== WORKERS ==" << dEnd{};
+        for (auto &workerPair : _workers)
+        {
+            auto &worker = workerPair.second;
+            out << worker->getStructureRaport(0) << dEnd{};
+        }
+        out << "== STOREHOUSES ==" << dEnd{};
+        for (auto &storeHausePair : _storeHauses)
+        {
+            auto &store = storeHausePair.second;
+            out << store->getStructureRaport(0) << dEnd{};
+        }
+        return out.str();
+    }
+
+    std::string Factory::getStructure()
+    {
+        std::stringstream out;
+        out << "; == LOADING RAMPS ==" << dEnd{};
+        for (auto &rampPair : _loadingRamps)
+        {
+            auto &ramp = rampPair.second;
+            out << ramp->getStructure() << dEnd{};
+        }
+        out << "; == WORKERS ==" << dEnd{};
+        for (auto &workerPair : _workers)
+        {
+            auto &worker = workerPair.second;
+            out << worker->getStructure() << dEnd{};
+        }
+        out << "; == STOREHOUSES ==" << dEnd{};
+        for (auto &storeHausePair : _storeHauses)
+        {
+            auto &store = storeHausePair.second;
+            out << store->getStructure() << dEnd{};
+        }
+
+        out << "; == LINKS ==" << dEnd{};
+        for (auto &linkPair : _links)
+        {
+            auto &link = linkPair.second;
+            out << link->getStructure() << dEnd{};
+        }
+        return out.str();
+    }
+
+    bool Factory::empty() { return _loadingRamps.empty() && _workers.empty() && _storeHauses.empty() && _links.empty(); }
+
+    void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportInfo)
+    {
+        raportOutStream << "========= Simulation Start =========" << std::endl;
+        for (size_t time = 0; time < maxIterations; ++time)
+        {
+            for (auto &ramp : _loadingRamps)
+            {
+                ramp.second->process(time);
+            }
+            for (auto &ramp : _workers)
+            {
+                ramp.second->process(time);
+            }
+            if (raportInfo.isRaportTime(time))
+            {
+                raportOutStream << std::format("========= Iteration: {} =========", time) << std::endl;
+                raportOutStream << generateStateRaport();
+            }
+        }
     }
 }

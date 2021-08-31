@@ -3,6 +3,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <optional>
 
 namespace CLI
 {
@@ -13,12 +14,12 @@ namespace sd
 {
     struct Configuration
     {
-        std::string structureFile = "";
+        std::optional<std::string> structureFile = std::nullopt;
         size_t maxIterations = 100;
 
-        std::variant<size_t, std::vector<size_t>> stateRaportTimings = size_t{0};
+        std::variant<size_t, std::vector<size_t>> stateRaportTimings = size_t{20};
         bool showStructureRaport = false;
-        std::string raportFile = "";
+        std::optional<std::string> raportFile = std::nullopt;
     };
 
     enum NodeType

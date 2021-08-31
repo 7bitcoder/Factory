@@ -11,6 +11,13 @@ namespace sd
         FIFO
     };
 
+    struct WorkerData
+    {
+        size_t id;
+        size_t processingTime;
+        WorkerType type;
+    };
+
     class Worker final : public SourceNode, public SinkNode
     {
     private:
@@ -21,6 +28,8 @@ namespace sd
         using Ptr = std::shared_ptr<Worker>;
 
         Worker(size_t id, WorkerType type = WorkerType::FIFO, size_t processingTime = 1);
+
+        Worker(const WorkerData &data);
 
         Product::Ptr moveOutProduct() final;
 
