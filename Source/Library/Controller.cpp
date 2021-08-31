@@ -25,11 +25,11 @@ namespace sd
         bool breakFromCliMode = false;
     }
 
-    Controller::Controller(Configuration &&config)
+    Controller::Controller(Configuration &&config, std::ostream &out, std::ostream &err, std::istream & in)
         : _config(config),
-          _out(std::cout),
-          _in(std::cin),
-          _err(std::cerr)
+          _out(out),
+          _in(in),
+          _err(err)
     {
         buildCommandLineInterface();
     }

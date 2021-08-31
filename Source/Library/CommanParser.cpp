@@ -45,7 +45,7 @@ namespace sd
             "On every net modifications structure raport will be shown");
     }
 
-    bool CommandParser::parse(int argc, char **argv)
+    bool CommandParser::parse(int argc, char **argv, std::ostream &out, std::ostream &err)
     {
         try
         {
@@ -53,7 +53,7 @@ namespace sd
         }
         catch (const CLI::ParseError &e)
         {
-            _app->exit(e);
+            _app->exit(e, out, err);
             return false;
         }
         return true;

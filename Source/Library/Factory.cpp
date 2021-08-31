@@ -116,11 +116,11 @@ namespace sd
         }
         catch (std::exception &e)
         {
-            std::cout << std::format("Error in line {}: {}", lineCnt, e.what());
+            throw std::runtime_error(std::format("Error in line {}: {}", lineCnt, e.what()));
         }
         catch (...)
         {
-            std::cout << std::format("Unexpected error in line {}", lineCnt);
+            throw std::runtime_error(std::format("Unexpected error in line {}", lineCnt));
         }
         return nullptr;
     }

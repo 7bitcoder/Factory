@@ -52,7 +52,7 @@ namespace sd
 
     std::string Link::getStructureRaport(size_t offset) { return std::format("{}{} (p = {})", getOffset(offset), _sink->toString(), getProbability()); }
 
-    std::string Link::getStructure() { return std::format("LINK id={} src={}-{} dest={}-{} p={})", getId(), toString(_source.lock()->getNodeType()), _source.lock()->getId(), toString(_sink->getNodeType()), _sink->getId(), getProbability()); }
+    std::string Link::getStructure() { return std::format("LINK id={} src={}-{} dest={}-{} p={}", getId(), toString(_source.lock()->getNodeType()), _source.lock()->getId(), toString(_sink->getNodeType()), _sink->getId(), getProbability()); }
 
     std::shared_ptr<SinkNode> Link::getSink() const { return _sink; }
 
