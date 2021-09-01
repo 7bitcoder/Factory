@@ -21,7 +21,6 @@ namespace sd
 
     class Node
         : public Identifiable,
-          public Structure,
           public ToString,
           public Type
     {
@@ -61,6 +60,7 @@ namespace sd
         void resetProcessTime();
 
         SourceLinksHub &getSourceLinksHub();
+        const SourceLinksHub &getSourceLinksHub() const;
     };
 
     class SinkNode

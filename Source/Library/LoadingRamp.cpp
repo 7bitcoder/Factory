@@ -23,7 +23,7 @@ namespace sd
         return std::make_unique<Product>();
     }
 
-    std::string LoadingRamp::getStructureRaport(size_t offset)
+    std::string LoadingRamp::getStructureRaport(size_t offset) const
     {
         std::stringstream out;
         out << getOffset(offset++) << toString() << std::endl;
@@ -32,7 +32,7 @@ namespace sd
         return out.str();
     }
 
-    std::string LoadingRamp::getStructure() { return std::format("LOADING_RAMP id={} delivery-interval={}", getId(), getProcesingTime()); }
+    std::string LoadingRamp::toString() const { return std::format("LOADING_RAMP #{}", getId()); }
 
-    std::string LoadingRamp::toString() { return std::format("LOADING_RAMP #{}", getId()); }
+    const LoadingRampData LoadingRamp::getLoadingRampData() const { return {getId(), getProcesingTime()}; }
 }

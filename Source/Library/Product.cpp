@@ -10,5 +10,5 @@ namespace sd
 
     Product::Product() : Identifiable(_idSeed++) {}
 
-    std::string Product::toString() { return std::format("#{}", getId()); }
+    std::string Product::toString() const { return std::format("#{}", getId()); }
 }

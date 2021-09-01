@@ -5,11 +5,6 @@
 
 namespace sd
 {
-    enum WorkerType
-    {
-        LIFO,
-        FIFO
-    };
 
     struct WorkerData
     {
@@ -31,22 +26,23 @@ namespace sd
 
         Worker(const WorkerData &data);
 
+        const WorkerData getWorkerData() const;
+
         Product::Ptr moveOutProduct() final;
 
         void moveInProduct(Product::Ptr &&product) final;
 
-        std::string getStructureRaport(size_t offset) final;
+        std::string getStructureRaport(size_t offset) const final;
 
-        std::string getStateRaport(size_t offset) final;
+        std::string getStateRaport(size_t offset) const final;
 
-        std::string getCurrentWorkRaport();
+        std::string toString() const final;
 
-        std::string toString() final;
-        std::string getStructure() final;
-
-        NodeType getNodeType() final { return NodeType::WORKER; }
+        NodeType getNodeType() const final;
 
     private:
-        std::string queueTypeAsStr() const;
+        WorkerType getWorkerType() const;
+
+        std::string getCurrentWorkRaport() const;
     };
 }

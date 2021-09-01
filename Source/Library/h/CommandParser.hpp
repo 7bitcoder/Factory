@@ -17,6 +17,7 @@ namespace sd
         ~CommandParser();
 
         bool parse(int argc, char **argv, std::ostream &out, std::ostream &err);
-        Configuration getResults() { return _results; }
+
+        const Configuration &getResults() const;
     };
 }

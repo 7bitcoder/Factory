@@ -31,6 +31,8 @@ namespace sd
 
     SourceLinksHub &SourceNode::getSourceLinksHub() { return _sourceLinksHub; }
 
+    const SourceLinksHub &SourceNode::getSourceLinksHub() const { return _sourceLinksHub; }
+
     SinkNode::SinkNode(size_t id) : Node(id) {}
 
     void SinkNode::moveInProduct(Product::Ptr &&product)

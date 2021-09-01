@@ -4,6 +4,7 @@
 
 #include "CLI11.hpp"
 #include "Controller.hpp"
+#include "FactoryUtils.hpp"
 
 namespace sd
 {
@@ -23,9 +24,31 @@ namespace sd
         std::pair<size_t, NodeType> destination;
 
         bool breakFromCliMode = false;
+
+        Factory::Ptr createFactory(const std::optional<std::string> &filePathOptional)
+        {
+            auto factory = std::make_unique<Factory>();
+            if (filePathOptional)
+            {
+                auto filePath = *filePathOptional;
+                if (!std::filesystem::exists(filePath))
+                {
+                    throw std::runtime_error(std::format("File {}, does not exists", filePath));
+                }
+                std::ifstream file(filePath);
+                file >> *factory;
+            }
+            return std::move(factory);
+        }
+
+        void saveFactoryToFile(const Factory &factory, const std::filesystem::path &filePath)
+        {
+            std::ofstream file(filePath);
+            file << factory;
+        }
     }
 
-    Controller::Controller(Configuration &&config, std::ostream &out, std::ostream &err, std::istream & in)
+    Controller::Controller(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in)
         : _config(config),
           _out(out),
           _in(in),
@@ -99,7 +122,7 @@ namespace sd
 
         _cli->add_subcommand("save", "Saves factory structure to file")
             ->callback([this]()
-                       { saveFactoryToFile(*_config.structureFile); });
+                       { saveFactoryToFile(*_factory, *_config.structureFile); });
 
         _cli->add_subcommand("print", "Prints factory structure")
             ->callback([this]()
@@ -108,13 +131,9 @@ namespace sd
 
     void Controller::run()
     {
-        getOut() << " ============================ ";
-        getOut() << "FACTORY SIMULATOR v 0.1";
-        getOut() << " ============================ ";
-        getOut() << std::endl;
-
-        _factory = std::move(createFactory(_config.structureFile));
-        if (_factory->empty())
+        getOut() << " ============================ FACTORY SIMULATOR v 0.1 ============================ " << std::endl;
+        _factory = createFactory(_config.structureFile);
+        if (_factory->initialized())
         {
             getOut() << ">> factory structure is not initialized please add new elelemts to factory using cli, type -h for help <<" << std::endl;
         }
@@ -139,6 +158,7 @@ namespace sd
                 getErr() << e.what() << std::endl;
             }
         }
+        getOut() << " ============================== STARTING SIMULATION ============================== " << std::endl;
         runSimulation(_config.raportFile, _config.maxIterations, {_config.stateRaportTimings});
     }
 
@@ -161,26 +181,4 @@ namespace sd
 
     std::istream &Controller::getIn() { return _in; }
 
-    Factory::Ptr Controller::createFactory(const std::optional<std::string> &filePath)
-    {
-        return filePath ? std::move(createFactoryFromFile(*filePath)) : std::make_unique<Factory>();
-    }
-
-    Factory::Ptr Controller::createFactoryFromFile(const std::filesystem::path &filePath)
-    {
-        auto curr = std::filesystem::current_path().string();
-        if (!std::filesystem::exists(filePath))
-        {
-            throw std::runtime_error(std::format("File {}, does not exists", filePath.string()));
-        }
-        std::ifstream file(filePath);
-        auto factory = Factory::fromStream(file);
-        return std::move(factory);
-    }
-
-    void Controller::saveFactoryToFile(const std::filesystem::path &filePath) const
-    {
-        std::ofstream file(filePath);
-        file << _factory->getStructure();
-    }
 }

@@ -22,15 +22,16 @@ namespace sd
 
         LoadingRamp(const LoadingRampData &data);
 
+        const LoadingRampData getLoadingRampData() const;
+
         Product::Ptr moveOutProduct() final;
 
-        std::string getStructureRaport(size_t offset) final;
+        std::string getStructureRaport(size_t offset) const final;
 
         Product::Ptr createProduct();
 
-        std::string toString() final;
-        std::string getStructure() final;
+        std::string toString() const final;
 
-        NodeType getNodeType() final { return NodeType::RAMP; }
+        NodeType getNodeType() const final { return NodeType::RAMP; }
     };
 }

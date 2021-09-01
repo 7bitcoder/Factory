@@ -20,15 +20,16 @@ namespace sd
 
         StoreHause(size_t id);
 
-        StoreHause(const StoreHauseData& data);
+        StoreHause(const StoreHauseData &data);
 
-        std::string getStructureRaport(size_t offset) final;
+        const StoreHauseData getStoreHauseData() const;
 
-        std::string getStateRaport(size_t offset) final;
+        std::string getStructureRaport(size_t offset) const final;
 
-        std::string toString() final;
-        std::string getStructure() final;
+        std::string getStateRaport(size_t offset) const final;
 
-        NodeType getNodeType() final { return NodeType::STORE; }
+        std::string toString() const final;
+
+        NodeType getNodeType() const final { return NodeType::STORE; }
     };
 }

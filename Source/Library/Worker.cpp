@@ -32,22 +32,18 @@ namespace sd
             resetProcessTime();
         }
     }
-    std::string Worker::queueTypeAsStr() const
-    {
-        return _type == WorkerType::FIFO ? "FIFO" : "LIFO";
-    }
 
-    std::string Worker::getStructureRaport(size_t offset)
+    std::string Worker::getStructureRaport(size_t offset) const
     {
         std::stringstream out;
         out << getOffset(offset++) << toString() << std::endl;
         out << getOffset(offset) << "Processing time: " << getProcesingTime() << std::endl;
-        out << getOffset(offset) << "Queue type: " << queueTypeAsStr() << std::endl;
+        out << getOffset(offset) << "Queue type: " << sd::toString(getWorkerType()) << std::endl;
         out << getSourceLinksHub().getStructureRaport(offset);
         return out.str();
     }
 
-    std::string Worker::getStateRaport(size_t offset)
+    std::string Worker::getStateRaport(size_t offset) const
     {
         std::stringstream out;
         out << getOffset(offset) << toString() << std::endl;
@@ -55,13 +51,16 @@ namespace sd
         return out.str();
     };
 
-    std::string Worker::getCurrentWorkRaport()
+    std::string Worker::getCurrentWorkRaport() const
     {
         return _currentProduct ? std::format("{} (pt = {}), ", _currentProduct->toString(), getCurrentProcesingTime()) : "";
     };
 
-    std::string Worker::getStructure() { return std::format("WORKER id={} processing-time={} queue-type={}", getId(), getProcesingTime(), queueTypeAsStr()); }
+    std::string Worker::toString() const { return std::format("WORKER #{}", getId()); }
 
-    std::string Worker::toString() { return std::format("WORKER #{}", getId()); }
+    NodeType Worker::getNodeType() const { return NodeType::WORKER; }
 
+    WorkerType Worker::getWorkerType() const { return _type; }
+
+    const WorkerData Worker::getWorkerData() const { return {getId(), getProcesingTime(), getWorkerType()}; }
 }

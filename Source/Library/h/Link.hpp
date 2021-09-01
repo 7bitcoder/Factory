@@ -45,7 +45,6 @@ namespace sd
     class Link final
         : public Identifiable,
           public StructureRaportable,
-          public Structure,
           public std::enable_shared_from_this<Link>
     {
     private:
@@ -62,6 +61,8 @@ namespace sd
 
         Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
 
+        const LinkData getLinkData() const;
+
         ~Link();
 
         void bindLinks();
@@ -74,9 +75,7 @@ namespace sd
 
         void setProbability(double newProbability);
 
-        std::string getStructureRaport(size_t offset) final;
-
-        std::string getStructure() final;
+        std::string getStructureRaport(size_t offset) const final;
 
         std::shared_ptr<SinkNode> getSink() const;
     };
@@ -95,7 +94,7 @@ namespace sd
 
         bool connected() const;
 
-        std::string getStructureRaport(size_t offset) final;
+        std::string getStructureRaport(size_t offset) const final;
 
         const std::vector<Link::Ptr> &getLinks() const;
 

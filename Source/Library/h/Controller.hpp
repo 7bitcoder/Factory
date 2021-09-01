@@ -18,7 +18,7 @@ namespace sd
         std::istream &_in;
 
     public:
-        Controller(Configuration &&config, std::ostream &out, std::ostream &err, std::istream &in);
+        Controller(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in);
         ~Controller();
 
         void run();
@@ -27,10 +27,6 @@ namespace sd
         void buildCommandLineInterface();
 
         void runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations, const Factory::RaportGuard &raportGuard);
-
-        Factory::Ptr createFactory(const std::optional<std::string> &filePath);
-        Factory::Ptr createFactoryFromFile(const std::filesystem::path &filePath);
-        void saveFactoryToFile(const std::filesystem::path &file) const;
 
         std::ostream &getOut();
         std::ostream &getErr();

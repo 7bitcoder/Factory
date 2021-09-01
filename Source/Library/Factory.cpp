@@ -1,7 +1,6 @@
 #include <format>
 
 #include "Factory.hpp"
-#include "HelperClasses.hpp"
 
 namespace sd
 {
@@ -71,58 +70,6 @@ namespace sd
             throw std::runtime_error("Raport Info Error");
         }
         return false;
-    }
-
-    Factory::Ptr Factory::fromStream(std::istream &stream)
-    {
-        size_t lineCnt = 0;
-        try
-        {
-            auto ptr = std::make_unique<Factory>();
-            for (std::string line; std::getline(stream, line); ++lineCnt)
-            {
-                if (line.empty() || line.front() == ';')
-                {
-                    continue;
-                }
-
-                auto splitted = splitStr(line, ' ');
-                if (splitted.empty())
-                {
-                    continue;
-                }
-                if (splitted.front() == "WORKER")
-                {
-                    ptr->addWorker(parseWorker(splitted));
-                }
-                else if (splitted.front() == "LOADING_RAMP")
-                {
-                    ptr->addLoadingRamp(parseLoadingRamp(splitted));
-                }
-                else if (splitted.front() == "STOREHOUSE")
-                {
-                    ptr->addStorehause(parseStoreHause(splitted));
-                }
-                else if (splitted.front() == "LINK")
-                {
-                    ptr->addLink(parseLink(splitted));
-                }
-                else
-                {
-                    throw std::runtime_error("Expected word: WORKER | LOADING_RAMP | STOREHOUSE | LINK");
-                }
-            }
-            return std::move(ptr);
-        }
-        catch (std::exception &e)
-        {
-            throw std::runtime_error(std::format("Error in line {}: {}", lineCnt, e.what()));
-        }
-        catch (...)
-        {
-            throw std::runtime_error(std::format("Unexpected error in line {}", lineCnt));
-        }
-        return nullptr;
     }
 
     void Factory::addWorker(const WorkerData &data)
@@ -219,7 +166,67 @@ namespace sd
         res.first->second->bindLinks();
     }
 
-    void Factory::validate()
+    void Factory::removeWorker(size_t id)
+    {
+        _workers.erase(id);
+    }
+
+    void Factory::removeLoadingRamp(size_t id)
+    {
+        _loadingRamps.erase(id);
+    }
+
+    void Factory::removeStorehause(size_t id)
+    {
+        _storeHauses.erase(id);
+    }
+
+    void Factory::removeLink(size_t id)
+    {
+        _links.erase(id);
+    }
+
+    const std::vector<WorkerData> Factory::getWorkersData() const
+    {
+        auto res = std::vector<WorkerData>(_workers.size());
+        for (auto &worker : _workers)
+        {
+            res.emplace_back(worker.second->getWorkerData());
+        }
+        return res;
+    }
+
+    const std::vector<LoadingRampData> Factory::getLoadingRampsData() const
+    {
+        auto res = std::vector<LoadingRampData>(_loadingRamps.size());
+        for (auto &ramps : _loadingRamps)
+        {
+            res.emplace_back(ramps.second->getLoadingRampData());
+        }
+        return res;
+    }
+
+    const std::vector<StoreHauseData> Factory::getStorehausesData() const
+    {
+        auto res = std::vector<StoreHauseData>(_storeHauses.size());
+        for (auto &store : _storeHauses)
+        {
+            res.emplace_back(store.second->getStoreHauseData());
+        }
+        return res;
+    }
+
+    const std::vector<LinkData> Factory::getLinksData() const
+    {
+        auto res = std::vector<LinkData>(_links.size());
+        for (auto &link : _links)
+        {
+            res.emplace_back(link.second->getLinkData());
+        }
+        return res;
+    }
+
+    void Factory::validate() const
     {
         for (auto &workerPair : _workers)
         {
@@ -295,40 +302,9 @@ namespace sd
         return out.str();
     }
 
-    std::string Factory::getStructure()
-    {
-        std::stringstream out;
-        out << "; == LOADING RAMPS ==" << dEnd{};
-        for (auto &rampPair : _loadingRamps)
-        {
-            auto &ramp = rampPair.second;
-            out << ramp->getStructure() << dEnd{};
-        }
-        out << "; == WORKERS ==" << dEnd{};
-        for (auto &workerPair : _workers)
-        {
-            auto &worker = workerPair.second;
-            out << worker->getStructure() << dEnd{};
-        }
-        out << "; == STOREHOUSES ==" << dEnd{};
-        for (auto &storeHausePair : _storeHauses)
-        {
-            auto &store = storeHausePair.second;
-            out << store->getStructure() << dEnd{};
-        }
+    bool Factory::initialized() const { return _loadingRamps.empty() && _workers.empty() && _storeHauses.empty() && _links.empty(); }
 
-        out << "; == LINKS ==" << dEnd{};
-        for (auto &linkPair : _links)
-        {
-            auto &link = linkPair.second;
-            out << link->getStructure() << dEnd{};
-        }
-        return out.str();
-    }
-
-    bool Factory::empty() { return _loadingRamps.empty() && _workers.empty() && _storeHauses.empty() && _links.empty(); }
-
-    void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportInfo)
+    void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportGuard)
     {
         raportOutStream << "========= Simulation Start =========" << std::endl;
         for (size_t time = 0; time < maxIterations; ++time)
@@ -341,7 +317,7 @@ namespace sd
             {
                 ramp.second->process(time);
             }
-            if (raportInfo.isRaportTime(time))
+            if (raportGuard.isRaportTime(time))
             {
                 raportOutStream << std::format("========= Iteration: {} =========", time) << std::endl;
                 raportOutStream << generateStateRaport();

@@ -24,6 +24,7 @@ namespace sd
                 mutable size_t nextRaportIndex;
             };
             std::variant<Interval, RaportTimes> _raportTimes;
+
         public:
             RaportGuard(std::variant<size_t, std::vector<size_t>> &var);
 
@@ -38,20 +39,28 @@ namespace sd
 
     public:
         using Ptr = std::unique_ptr<Factory>;
-        static Factory::Ptr fromStream(std::istream &in);
 
-        void run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportInfo);
+        void run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportGuard);
 
         std::string generateStateRaport();
         std::string generateStructureRaport();
-        std::string getStructure();
 
         void addWorker(const WorkerData &data);
         void addLoadingRamp(const LoadingRampData &data);
         void addStorehause(const StoreHauseData &data);
         void addLink(const LinkData &data);
 
-        bool empty();
-        void validate();
+        void removeWorker(size_t id);
+        void removeLoadingRamp(size_t id);
+        void removeStorehause(size_t id);
+        void removeLink(size_t id);
+
+        const std::vector<WorkerData> getWorkersData() const;
+        const std::vector<LoadingRampData> getLoadingRampsData() const;
+        const std::vector<StoreHauseData> getStorehausesData() const;
+        const std::vector<LinkData> getLinksData() const;
+
+        bool initialized() const;
+        void validate() const;
     };
 }

@@ -58,4 +58,7 @@ namespace sd
         }
         return true;
     }
+
+    const Configuration &CommandParser::getResults() const { return _results; }
+
 }
