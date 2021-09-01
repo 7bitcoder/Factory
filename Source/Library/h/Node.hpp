@@ -34,9 +34,6 @@ namespace sd
           virtual public StructureRaportable,
           public ProductSource
     {
-    public:
-        using Ptr = std::shared_ptr<SourceNode>;
-
     private:
         const size_t _processTime = 0;
         size_t _currentProcessTime = 0;
@@ -44,6 +41,8 @@ namespace sd
         SourceLinksHub _sourceLinksHub;
 
     public:
+        using Ptr = std::shared_ptr<SourceNode>;
+
         SourceNode() = delete;
         SourceNode(size_t id, size_t processTime);
         SourceNode(const SourceNode &) = delete;
@@ -60,6 +59,7 @@ namespace sd
         void resetProcessTime();
 
         SourceLinksHub &getSourceLinksHub();
+
         const SourceLinksHub &getSourceLinksHub() const;
     };
 
@@ -69,14 +69,13 @@ namespace sd
           public StateRaportable,
           public ProductSink
     {
-    public:
-        using Ptr = std::shared_ptr<SinkNode>;
-
     private:
         std::deque<Product::Ptr> _storedProducts;
         SinkLinksHub _sinkLinksHub;
 
     public:
+        using Ptr = std::shared_ptr<SinkNode>;
+
         SinkNode() = delete;
         SinkNode(size_t id);
         SinkNode(const SinkNode &) = delete;
@@ -88,6 +87,8 @@ namespace sd
         void moveInProduct(Product::Ptr &&product) override;
 
         SinkLinksHub &getSinkLinksHub();
+
+        const SinkLinksHub &getSinkLinksHub() const ;
 
         std::string getSinkRaport() const;
 

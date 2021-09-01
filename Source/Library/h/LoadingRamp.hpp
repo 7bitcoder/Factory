@@ -28,10 +28,11 @@ namespace sd
 
         std::string getStructureRaport(size_t offset) const final;
 
-        Product::Ptr createProduct();
-
         std::string toString() const final;
 
-        NodeType getNodeType() const final { return NodeType::RAMP; }
+        NodeType getNodeType() const final;
+
+    private:
+        Product::Ptr createProduct() const;
     };
 }

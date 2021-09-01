@@ -33,11 +33,12 @@ namespace sd
             _results.maxIterations,
             "Maximum iteration that simulation will be run");
 
-        _app->add_option(
-                "-f,--file",
-                _results.structureFile,
-                "File that contains fabric structure")
-            ->required();
+        auto file = _app->add_option(
+            "-f,--file",
+            _results.structureFile,
+            "File that contains fabric structure");
+        file->check(CLI::ExistingFile);
+        file->required();
 
         _app->add_flag(
             "-s,--showStructureRaports",

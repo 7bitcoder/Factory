@@ -10,15 +10,25 @@
 namespace sd
 {
 
-    Random::Random() : _eng(_rd()), _distr(0, 1) {}
-
-    Random &Random::get()
+    namespace
     {
-        static Random r;
-        return r;
-    }
+        class Random
+        {
+        private:
+            std::random_device _rd;
+            std::default_random_engine _eng;
+            std::uniform_real_distribution<double> _distr;
+            Random() : _eng(_rd()), _distr(0, 1) {}
 
-    double Random::nextDouble() { return _distr(_eng); }
+        public:
+            static Random &get()
+            {
+                static Random r;
+                return r;
+            }
+            double nextDouble() { return _distr(_eng); }
+        };
+    }
 
     Link::Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
         : Identifiable(id), _baseProbability(probability), _probability(probability), _source(source), _sink(sink) {}
@@ -26,25 +36,44 @@ namespace sd
     Link::Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink)
         : Identifiable(data.id), _baseProbability(data.probability), _probability(data.probability), _source(source), _sink(sink) {}
 
-    const LinkData Link::getLinkData() const { return {getId(), getProbability(), {_source.lock()->getId(), _source.lock()->getNodeType()}, {_sink->getId(), _sink->getNodeType()}}; }
+    const LinkData Link::getLinkData() const
+    {
+        auto source = getSource();
+        auto sink = getSink();
+        return {getId(), getProbability(), {source->getId(), source->getNodeType()}, {sink->getId(), sink->getNodeType()}};
+    }
 
     Link::~Link()
     {
-        //if (auto source = _source.lock())
-        //{
-        //    source->getSourceLinksHub().unBindLink(shared_from_this());
-        //}
-        //_sink->getSinkLinksHub().unBindLink(shared_from_this());
+        unBindSource();
+        unBindSink();
     }
 
     void Link::bindLinks()
     {
-        auto source = _source.lock();
-        source->getSourceLinksHub().bindLink(shared_from_this());
-        _sink->getSinkLinksHub().bindLink(shared_from_this());
+        getSource()->getSourceLinksHub().bindLink(shared_from_this());
+        getSink()->getSinkLinksHub().bindLink(shared_from_this());
     }
 
-    void Link::passProduct(Product::Ptr &&product) { _sink->moveInProduct(std::move(product)); }
+    void Link::unBindSource()
+    {
+        if (!_source.expired())
+        {
+            getSource()->getSourceLinksHub().unBindLink(getId());
+        }
+    }
+
+    void Link::unBindSink()
+    {
+        if (!_sink.expired())
+        {
+            getSink()->getSinkLinksHub().unBindLink(getId());
+        }
+    }
+
+    bool Link::connected() const { return !_source.expired() && !_sink.expired(); }
+
+    void Link::passProduct(Product::Ptr &&product) { getSink()->moveInProduct(std::move(product)); }
 
     double Link::getProbability() const { return _probability; }
 
@@ -52,9 +81,38 @@ namespace sd
 
     void Link::setProbability(double newProbability) { _probability = newProbability; }
 
-    std::string Link::getStructureRaport(size_t offset) const { return std::format("{}{} (p = {})", getOffset(offset), _sink->toString(), getProbability()); }
+    std::string Link::getStructureRaport(size_t offset) const { return std::format("{}{} (p = {})", getOffset(offset), getSink()->toString(), getProbability()); }
 
-    std::shared_ptr<SinkNode> Link::getSink() const { return _sink; }
+    std::shared_ptr<SourceNode> Link::getSource() const
+    {
+        if (_source.expired())
+        {
+            throw std::runtime_error(std::format("Link id: {}, source node is invalid", getId()));
+        }
+        return _source.lock();
+    }
+
+    std::shared_ptr<SinkNode> Link::getSink() const
+    {
+        if (_sink.expired())
+        {
+            throw std::runtime_error(std::format("Link id: {}, sink node is invalid", getId()));
+        }
+        return _sink.lock();
+    }
+
+    SourceLinksHub::~SourceLinksHub()
+    {
+        unbindAll();
+    }
+
+    void SourceLinksHub::unbindAll()
+    {
+        for (auto &link : _links)
+        {
+            link->unBindSink();
+        }
+    }
 
     void SourceLinksHub::bindLink(Link::Ptr link)
     {
@@ -87,8 +145,6 @@ namespace sd
     }
 
     bool SourceLinksHub::connected() const { return !_links.empty(); }
-
-    const std::vector<Link::Ptr> &SourceLinksHub::getLinks() const { return _links; }
 
     Link::Ptr SourceLinksHub::getRandomLink() const
     {
@@ -128,11 +184,10 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset++) << "Receivers:" << std::endl;
-        auto &links = getLinks();
-        for (auto &link : links)
+        for (auto &link : _links)
         {
             out << link->getStructureRaport(offset);
-            if (link != links.back())
+            if (link != _links.back())
             {
                 out << std::endl;
             }
@@ -140,30 +195,28 @@ namespace sd
         return out.str();
     }
 
+    SinkLinksHub::~SinkLinksHub() { unbindAll(); }
+
+    void SinkLinksHub::unbindAll()
+    {
+        for (auto &link : _links)
+        {
+            link->unBindSource();
+        }
+    }
+
     void SinkLinksHub::bindLink(Link::Ptr link) { _links.emplace_back(link); }
 
     void SinkLinksHub::unBindLink(size_t id)
     {
-        std::erase_if(_links, [id](Link::WeakPtr weakLink)
-                      {
-                          if (auto link = weakLink.lock())
-                          {
-                              return link->getId() == id;
-                          }
-                          return true;
-                      });
+        std::erase_if(_links, [id](Link::Ptr ptr)
+                      { return ptr->getId() == id; });
     }
 
     void SinkLinksHub::unBindLink(Link::Ptr linkToRemove)
     {
-        std::erase_if(_links, [linkToRemove](Link::WeakPtr weakLink)
-                      {
-                          if (auto link = weakLink.lock())
-                          {
-                              return link == linkToRemove;
-                          }
-                          return true;
-                      });
+        std::erase_if(_links, [linkToRemove](Link::Ptr ptr)
+                      { return ptr == linkToRemove; });
     }
 
     bool SinkLinksHub::connected() const { return !_links.empty(); }

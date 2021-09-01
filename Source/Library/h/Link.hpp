@@ -29,19 +29,6 @@ namespace sd
         LinkBind sink;
     };
 
-    class Random
-    {
-    private:
-        std::random_device _rd;
-        std::default_random_engine _eng;
-        std::uniform_real_distribution<double> _distr;
-        Random();
-
-    public:
-        static Random &get();
-        double nextDouble();
-    };
-
     class Link final
         : public Identifiable,
           public StructureRaportable,
@@ -51,7 +38,7 @@ namespace sd
         double _probability;
         const double _baseProbability;
         std::weak_ptr<SourceNode> _source;
-        std::shared_ptr<SinkNode> _sink;
+        std::weak_ptr<SinkNode> _sink;
 
     public:
         using Ptr = std::shared_ptr<Link>;
@@ -61,22 +48,30 @@ namespace sd
 
         Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
 
-        const LinkData getLinkData() const;
-
         ~Link();
 
-        void bindLinks();
+        const LinkData getLinkData() const;
 
         void passProduct(Product::Ptr &&product);
+
+        std::string getStructureRaport(size_t offset) const final;
 
         double getBaseProbability() const;
 
         double getProbability() const;
 
+        bool connected() const;
+
+        void bindLinks();
+
         void setProbability(double newProbability);
 
-        std::string getStructureRaport(size_t offset) const final;
+        void unBindSource();
 
+        void unBindSink();
+
+    private:
+        std::shared_ptr<SourceNode> getSource() const;
         std::shared_ptr<SinkNode> getSink() const;
     };
 
@@ -86,6 +81,9 @@ namespace sd
         std::vector<Link::Ptr> _links;
 
     public:
+        SourceLinksHub() = default;
+        ~SourceLinksHub();
+
         void bindLink(Link::Ptr link);
         void unBindLink(size_t id);
         void unBindLink(Link::Ptr link);
@@ -96,25 +94,29 @@ namespace sd
 
         std::string getStructureRaport(size_t offset) const final;
 
-        const std::vector<Link::Ptr> &getLinks() const;
-
     private:
+        void unbindAll();
         void normalize();
 
-    private:
         Link::Ptr getRandomLink() const;
     };
 
     class SinkLinksHub
     {
     private:
-        std::vector<Link::WeakPtr> _links;
+        std::vector<Link::Ptr> _links;
 
     public:
+        SinkLinksHub() = default;
+        ~SinkLinksHub();
+
         void bindLink(Link::Ptr link);
         void unBindLink(size_t id);
         void unBindLink(Link::Ptr link);
 
         bool connected() const;
+
+    private:
+        void unbindAll();
     };
 }

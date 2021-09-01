@@ -4,6 +4,7 @@
 
 #include "Factory.hpp"
 #include "Interfaces.hpp"
+#include "Configuration.hpp"
 
 namespace sd
 {

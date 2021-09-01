@@ -104,6 +104,11 @@ namespace sd
         SourceNode::Ptr sourceNode;
         SinkNode::Ptr sinkNode;
 
+        if (data.source.type == NodeType::RAMP && data.sink.type == NodeType::STORE)
+        {
+            throw std::runtime_error("Cannot bind Ramp and Store.");
+        }
+
         if (data.source.type == NodeType::STORE)
         {
             throw std::runtime_error(std::format("Storehause of id {} cannot be used as link source.", data.source.id));
@@ -183,7 +188,12 @@ namespace sd
 
     void Factory::removeLink(size_t id)
     {
-        _links.erase(id);
+        if(auto linkPair = _links.find(id); linkPair != _links.end()) {
+            auto& link = linkPair->second;
+            link->unBindSink();
+            link->unBindSource();
+            _links.erase(linkPair);
+        }
     }
 
     const std::vector<WorkerData> Factory::getWorkersData() const
@@ -256,6 +266,15 @@ namespace sd
             if (!store->getSinkLinksHub().connected())
             {
                 throw std::runtime_error(std::format("StoreHause of id {} is not connected as sink.", store->getId()));
+            }
+        }
+
+        for (auto &linkPair : _links)
+        {
+            auto &link = linkPair.second;
+            if (!link->connected())
+            {
+                throw std::runtime_error(std::format("Link of id {} is not connected.", link->getId()));
             }
         }
     }

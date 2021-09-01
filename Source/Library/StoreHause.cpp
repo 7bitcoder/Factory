@@ -28,5 +28,7 @@ namespace sd
 
     std::string StoreHause::toString() const { return std::format("STOREHOUSE #{}", getId()); }
 
+    NodeType StoreHause::getNodeType() const { return NodeType::STORE; }
+
     const StoreHauseData StoreHause::getStoreHauseData() const { return {getId()}; }
 }

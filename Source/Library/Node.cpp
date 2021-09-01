@@ -42,6 +42,8 @@ namespace sd
 
     SinkLinksHub &SinkNode::getSinkLinksHub() { return _sinkLinksHub; }
 
+    const SinkLinksHub &SinkNode::getSinkLinksHub() const { return _sinkLinksHub; }
+
     bool SinkNode::areProductsAvailable() const { return _storedProducts.empty(); }
 
     Product::Ptr SinkNode::getProduct(bool first)

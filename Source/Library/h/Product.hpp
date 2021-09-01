@@ -15,8 +15,8 @@ namespace sd
     public:
         using Ptr = std::unique_ptr<Product>;
 
-        std::string toString() const final;
-
         Product();
+
+        std::string toString() const final;
     };
 }

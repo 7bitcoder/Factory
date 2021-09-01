@@ -3,6 +3,12 @@
 #include <memory>
 
 #include "Interfaces.hpp"
+#include "Configuration.hpp"
+
+namespace CLI
+{
+    class App;
+}
 
 namespace sd
 {

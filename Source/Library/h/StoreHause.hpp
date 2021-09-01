@@ -12,9 +12,8 @@ namespace sd
         size_t id;
     };
 
-    class StoreHause : public SinkNode
+    class StoreHause final : public SinkNode
     {
-    private:
     public:
         using Ptr = std::shared_ptr<StoreHause>;
 
@@ -30,6 +29,6 @@ namespace sd
 
         std::string toString() const final;
 
-        NodeType getNodeType() const final { return NodeType::STORE; }
+        NodeType getNodeType() const final;
     };
 }

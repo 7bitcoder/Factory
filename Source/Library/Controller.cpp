@@ -4,7 +4,7 @@
 
 #include "CLI11.hpp"
 #include "Controller.hpp"
-#include "FactoryUtils.hpp"
+#include "Utils.hpp"
 
 namespace sd
 {
@@ -63,7 +63,7 @@ namespace sd
     {
         _cli = std::make_unique<CLI::App>("CLI");
 
-        auto addCommands = _cli->add_subcommand("add");
+        auto addCommands = _cli->add_subcommand("add", "Adds speficied structure to factory: worker/ramp/store/link");
 
         auto addWorker = addCommands->add_subcommand("worker", "Adds new worker to factory");
         addWorker->add_option("-i,--id", id, "Worker Id, must be unique for all workers in factory")
@@ -127,6 +127,44 @@ namespace sd
         _cli->add_subcommand("print", "Prints factory structure")
             ->callback([this]()
                        { getOut() << _factory->generateStructureRaport(); });
+
+        auto removeCommands = _cli->add_subcommand("remove", "Removes speficied structure from factory: worker/ramp/store/link");
+
+        removeCommands->add_subcommand("print", "Prints factory structure")
+            ->callback([this]()
+                       { getOut() << _factory->generateStructureRaport(); });
+
+        auto removeWorker = removeCommands->add_subcommand("worker", "Removes worker from factory");
+        removeWorker->add_option("-i,--id", id, "Worker Id, must be unique for all workers in factory")
+            ->required();
+
+        removeWorker->callback(
+            [this]()
+            { _factory->removeWorker(id); });
+
+        auto removeRamp = removeCommands->add_subcommand("loading_ramp", "Removes loading ramp from factory")->alias("ramp");
+        removeRamp->add_option("-i,--id", id, "Loading ramp Id, must be unique for all loading ramps in factory")
+            ->required();
+
+        removeRamp->callback(
+            [this]()
+            { _factory->removeLoadingRamp(id); });
+
+        auto removeStore = removeCommands->add_subcommand("storehause", "Removes storehause from factory")->alias("store");
+        removeStore->add_option("-i,--id", id, "Storehause Id, must be unique for all storehauses in factory")
+            ->required();
+
+        removeStore->callback(
+            [this]()
+            { _factory->removeStorehause(id); });
+
+        auto removeLink = removeCommands->add_subcommand("link", "Removes link from factory");
+        removeLink->add_option("-i,--id", id, "Link Id, must be unique for all links in factory")
+            ->required();
+
+        removeLink->callback(
+            [this]()
+            { _factory->removeLink(id); });
     }
 
     void Controller::run()

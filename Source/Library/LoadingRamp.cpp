@@ -18,7 +18,7 @@ namespace sd
         return std::move(createProduct());
     }
 
-    Product::Ptr LoadingRamp::createProduct()
+    Product::Ptr LoadingRamp::createProduct() const
     {
         return std::make_unique<Product>();
     }
@@ -33,6 +33,8 @@ namespace sd
     }
 
     std::string LoadingRamp::toString() const { return std::format("LOADING_RAMP #{}", getId()); }
+
+    NodeType LoadingRamp::getNodeType() const { return NodeType::RAMP; }
 
     const LoadingRampData LoadingRamp::getLoadingRampData() const { return {getId(), getProcesingTime()}; }
 }
