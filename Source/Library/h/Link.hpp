@@ -11,9 +11,9 @@
 namespace sd
 {
     class SourceNode;
-    class SinkNode;
+    class DestinationNode;
     class Worker;
-    class StoreHause;
+    class StoreHouse;
 
     struct LinkBind
     {
@@ -26,7 +26,7 @@ namespace sd
         size_t id;
         double probability;
         LinkBind source;
-        LinkBind sink;
+        LinkBind destination;
     };
 
     class Link final
@@ -37,22 +37,24 @@ namespace sd
     private:
         double _probability;
         const double _baseProbability;
-        std::weak_ptr<SourceNode> _source;
-        std::weak_ptr<SinkNode> _sink;
+        SourceNode& _source;
+        DestinationNode& _destination;
 
     public:
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
-        Link(size_t id, double probability, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+        Link(size_t id, double probability, SourceNode& source, DestinationNode& destination);
 
-        Link(const LinkData &data, std::shared_ptr<SourceNode> source, std::shared_ptr<SinkNode> sink);
+        Link(const LinkData &data, SourceNode& source, DestinationNode& destination);
 
         ~Link();
 
         const LinkData getLinkData() const;
 
-        void passProduct(Product::Ptr &&product);
+        SourceNode& getSource();
+
+        DestinationNode& getDestination();
 
         std::string getStructureRaport(size_t offset) const final;
 
@@ -60,63 +62,10 @@ namespace sd
 
         double getProbability() const;
 
-        bool connected() const;
-
-        void bindLinks();
-
         void setProbability(double newProbability);
 
         void unBindSource();
 
-        void unBindSink();
-
-    private:
-        std::shared_ptr<SourceNode> getSource() const;
-        std::shared_ptr<SinkNode> getSink() const;
-    };
-
-    class SourceLinksHub : public StructureRaportable
-    {
-    private:
-        std::vector<Link::Ptr> _links;
-
-    public:
-        SourceLinksHub() = default;
-        ~SourceLinksHub();
-
-        void bindLink(Link::Ptr link);
-        void unBindLink(size_t id);
-        void unBindLink(Link::Ptr link);
-
-        void passProduct(Product::Ptr &&product);
-
-        bool connected() const;
-
-        std::string getStructureRaport(size_t offset) const final;
-
-    private:
-        void unbindAll();
-        void normalize();
-
-        Link::Ptr getRandomLink() const;
-    };
-
-    class SinkLinksHub
-    {
-    private:
-        std::vector<Link::Ptr> _links;
-
-    public:
-        SinkLinksHub() = default;
-        ~SinkLinksHub();
-
-        void bindLink(Link::Ptr link);
-        void unBindLink(size_t id);
-        void unBindLink(Link::Ptr link);
-
-        bool connected() const;
-
-    private:
-        void unbindAll();
+        void unBindDestination();
     };
 }

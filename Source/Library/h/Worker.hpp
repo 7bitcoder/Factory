@@ -13,14 +13,14 @@ namespace sd
         WorkerType type;
     };
 
-    class Worker final : public SourceNode, public SinkNode
+    class Worker final : public SourceNode, public DestinationNode
     {
     private:
         WorkerType _type;
         Product::Ptr _currentProduct;
 
     public:
-        using Ptr = std::shared_ptr<Worker>;
+        using Ptr = std::unique_ptr<Worker>;
 
         Worker(size_t id, WorkerType type = WorkerType::FIFO, size_t processingTime = 1);
 
@@ -40,9 +40,12 @@ namespace sd
 
         NodeType getNodeType() const final;
 
+        bool isProcessingProduct() const;
     private:
         WorkerType getWorkerType() const;
 
         std::string getCurrentWorkRaport() const;
+
+        void getNextProductToProcess();
     };
 }

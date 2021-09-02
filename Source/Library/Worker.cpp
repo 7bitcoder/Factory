@@ -8,30 +8,37 @@
 namespace sd
 {
     Worker::Worker(size_t id, WorkerType type, size_t processingTime)
-        : SourceNode(id, processingTime), SinkNode(id), _type(type), Node(id) {}
+        : SourceNode(id, processingTime), DestinationNode(id), _type(type), Node(id) {}
 
     Worker::Worker(const WorkerData &data)
-        : SourceNode(data.id, data.processingTime), SinkNode(data.id), _type(data.type), Node(data.id) {}
+        : SourceNode(data.id, data.processingTime), DestinationNode(data.id), _type(data.type), Node(data.id) {}
 
     Product::Ptr Worker::moveOutProduct()
     {
         auto ptr = std::move(_currentProduct);
-        if (!areProductsAvailable())
+        if (areProductsAvailable())
         {
-            _currentProduct = std::move(getProduct(_type == WorkerType::FIFO));
+            getNextProductToProcess();
         }
         return std::move(ptr);
     }
 
     void Worker::moveInProduct(Product::Ptr &&product)
     {
-        SinkNode::moveInProduct(std::move(product));
-        if (!_currentProduct)
+        DestinationNode::moveInProduct(std::move(product));
+        if (!isProcessingProduct())
         {
-            _currentProduct = std::move(getProduct(_type == WorkerType::FIFO));
-            resetProcessTime();
+            getNextProductToProcess();
         }
     }
+
+    void Worker::getNextProductToProcess()
+    {
+        _currentProduct = std::move(getProduct(_type == WorkerType::LIFO));
+        resetProcessTime();
+    }
+
+    bool Worker::isProcessingProduct() const { return bool{_currentProduct}; }
 
     std::string Worker::getStructureRaport(size_t offset) const
     {
@@ -39,7 +46,7 @@ namespace sd
         out << getOffset(offset++) << toString() << std::endl;
         out << getOffset(offset) << "Processing time: " << getProcesingTime() << std::endl;
         out << getOffset(offset) << "Queue type: " << sd::toString(getWorkerType()) << std::endl;
-        out << getSourceLinksHub().getStructureRaport(offset);
+        out << SourceNode::getStructureRaport(offset);
         return out.str();
     }
 
@@ -47,7 +54,7 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset) << toString() << std::endl;
-        out << getOffset(++offset) << "Queue: " << getCurrentWorkRaport() << getSinkRaport() << std::endl;
+        out << getOffset(++offset) << "Queue: " << getCurrentWorkRaport() << getStoredProductsRaport();
         return out.str();
     };
 

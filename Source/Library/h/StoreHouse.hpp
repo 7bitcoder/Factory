@@ -7,21 +7,21 @@
 
 namespace sd
 {
-    struct StoreHauseData
+    struct StoreHouseData
     {
         size_t id;
     };
 
-    class StoreHause final : public SinkNode
+    class StoreHouse final : public DestinationNode
     {
     public:
-        using Ptr = std::shared_ptr<StoreHause>;
+        using Ptr = std::unique_ptr<StoreHouse>;
 
-        StoreHause(size_t id);
+        StoreHouse(size_t id);
 
-        StoreHause(const StoreHauseData &data);
+        StoreHouse(const StoreHouseData &data);
 
-        const StoreHauseData getStoreHauseData() const;
+        const StoreHouseData getStoreHouseData() const;
 
         std::string getStructureRaport(size_t offset) const final;
 

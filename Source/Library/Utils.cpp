@@ -105,7 +105,7 @@ namespace sd
                 }
                 else if (word.starts_with("dest="))
                 {
-                    result.sink = getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, where type is one of store, worker and id is identifier", word));
+                    result.destination = getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, where type is one of store, worker and id is identifier", word));
                     define(destCheck, word);
                 }
                 else if (word.starts_with("p"))
@@ -220,11 +220,11 @@ namespace sd
             return result;
         }
 
-        StoreHauseData parseStoreHause(const std::vector<std::string> &input)
+        StoreHouseData parseStoreHouse(const std::vector<std::string> &input)
         {
             checkSize(input.size(), 1, std::format("Expected this line to fit this pattern: {}", storePattern));
 
-            StoreHauseData result;
+            StoreHouseData result;
 
             bool idCheck = false;
             for (auto &word : input)
@@ -284,7 +284,7 @@ namespace sd
                 }
                 else if (splitted.front() == "STOREHOUSE")
                 {
-                    factory.addStorehause(parseStoreHause(popFront(splitted)));
+                    factory.addStorehouse(parseStoreHouse(popFront(splitted)));
                 }
                 else if (splitted.front() == "LINK")
                 {
@@ -325,7 +325,7 @@ namespace sd
         stream << std::endl
                << "; == STOREHOUSES ==" << std::endl
                << std::endl;
-        for (auto &data : factory.getStorehausesData())
+        for (auto &data : factory.getStorehousesData())
         {
             stream << std::format("STOREHOUSE id={}", data.id) << std::endl;
         }
@@ -335,7 +335,7 @@ namespace sd
                << std::endl;
         for (auto &data : factory.getLinksData())
         {
-            stream << std::format("LINK id={} src={}-{} dest={}-{} p={}", data.id, toString(data.source.type), data.source.id, toString(data.sink.type), data.sink.id, data.probability) << std::endl;
+            stream << std::format("LINK id={} src={}-{} dest={}-{} p={}", data.id, toString(data.source.type), data.source.id, toString(data.destination.type), data.destination.id, data.probability) << std::endl;
         }
         return stream;
     }

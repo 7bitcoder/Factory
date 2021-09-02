@@ -9,16 +9,6 @@
 
 namespace sd
 {
-    struct ProductSource
-    {
-        virtual Product::Ptr moveOutProduct() = 0;
-    };
-
-    struct ProductSink
-    {
-        virtual void moveInProduct(Product::Ptr &&product) = 0;
-    };
-
     class Node
         : public Identifiable,
           public ToString,
@@ -38,18 +28,13 @@ namespace sd
         const size_t _processTime = 0;
         size_t _currentProcessTime = 0;
 
-        SourceLinksHub _sourceLinksHub;
+        std::vector<Link::Ptr> _links;
 
     public:
         using Ptr = std::shared_ptr<SourceNode>;
+        using RawPtr = SourceNode *;
 
-        SourceNode() = delete;
         SourceNode(size_t id, size_t processTime);
-        SourceNode(const SourceNode &) = delete;
-        SourceNode(SourceNode &&) = delete;
-
-        SourceNode &operator=(const SourceNode &) = delete;
-        SourceNode &operator=(SourceNode &&) = delete;
 
         size_t getProcesingTime() const;
         size_t getCurrentProcesingTime() const;
@@ -58,42 +43,53 @@ namespace sd
 
         void resetProcessTime();
 
-        SourceLinksHub &getSourceLinksHub();
+        void bindSourceLink(Link::Ptr link);
+        void unBindSourceLink(size_t id);
 
-        const SourceLinksHub &getSourceLinksHub() const;
+        void passProduct(Product::Ptr &&product);
+
+        std::string getStructureRaport(size_t offset) const override;
+
+        bool connectedSources() const;
+
+        void unbindAllSources();
+
+    private:
+        void normalize();
+
+        Link::Ptr getRandomLink() const;
     };
 
-    class SinkNode
+    class DestinationNode
         : virtual public Node,
           virtual public StructureRaportable,
           public StateRaportable,
-          public ProductSink
+          public ProductDestination
     {
     private:
         std::deque<Product::Ptr> _storedProducts;
-        SinkLinksHub _sinkLinksHub;
+
+        std::vector<Link::Ptr> _links;
 
     public:
-        using Ptr = std::shared_ptr<SinkNode>;
+        using Ptr = std::shared_ptr<DestinationNode>;
+        using RawPtr = DestinationNode *;
 
-        SinkNode() = delete;
-        SinkNode(size_t id);
-        SinkNode(const SinkNode &) = delete;
-        SinkNode(SinkNode &&) = delete;
-
-        SinkNode &operator=(const SinkNode &) = delete;
-        SinkNode &operator=(SinkNode &&) = delete;
+        DestinationNode(size_t id);
 
         void moveInProduct(Product::Ptr &&product) override;
 
-        SinkLinksHub &getSinkLinksHub();
-
-        const SinkLinksHub &getSinkLinksHub() const ;
-
-        std::string getSinkRaport() const;
+        std::string getStoredProductsRaport() const;
 
         bool areProductsAvailable() const;
 
         Product::Ptr getProduct(bool first = false);
+
+        void bindDestinationLink(Link::Ptr link);
+        void unBindDestinationLink(size_t id);
+
+        bool connectedDestinations() const;
+
+        void unbindAllDestinations();
     };
 }

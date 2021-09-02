@@ -28,7 +28,7 @@ namespace sd
         std::stringstream out;
         out << getOffset(offset++) << toString() << std::endl;
         out << getOffset(offset) << "Delivery interval: " << getProcesingTime() << std::endl;
-        out << getSourceLinksHub().getStructureRaport(offset);
+        out << SourceNode::getStructureRaport(offset);
         return out.str();
     }
 

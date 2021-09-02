@@ -74,7 +74,7 @@ namespace sd
 
     void Factory::addWorker(const WorkerData &data)
     {
-        auto res = _workers.emplace(data.id, std::make_shared<Worker>(data));
+        auto res = _workers.emplace(data.id, std::make_unique<Worker>(data));
         if (!res.second)
         {
             throw std::runtime_error(std::format("Worker of id {} was already created.", data.id));
@@ -83,41 +83,36 @@ namespace sd
 
     void Factory::addLoadingRamp(const LoadingRampData &data)
     {
-        auto res = _loadingRamps.emplace(data.id, std::make_shared<LoadingRamp>(data));
+        auto res = _loadingRamps.emplace(data.id, std::make_unique<LoadingRamp>(data));
         if (!res.second)
         {
             throw std::runtime_error(std::format("Loading ramp of id {} was already created.", data.id));
         }
     }
 
-    void Factory::addStorehause(const StoreHauseData &data)
+    void Factory::addStorehouse(const StoreHouseData &data)
     {
-        auto res = _storeHauses.emplace(data.id, std::make_shared<StoreHause>(data));
+        auto res = _storeHouses.emplace(data.id, std::make_unique<StoreHouse>(data));
         if (!res.second)
         {
-            throw std::runtime_error(std::format("Storehause of id {} was already created.", data.id));
+            throw std::runtime_error(std::format("Storehouse of id {} was already created.", data.id));
         }
     }
 
     void Factory::addLink(const LinkData &data)
     {
-        SourceNode::Ptr sourceNode;
-        SinkNode::Ptr sinkNode;
-
-        if (data.source.type == NodeType::RAMP && data.sink.type == NodeType::STORE)
-        {
-            throw std::runtime_error("Cannot bind Ramp and Store.");
-        }
+        SourceNode::RawPtr sourceNode;
+        DestinationNode::RawPtr destinationNode;
 
         if (data.source.type == NodeType::STORE)
         {
-            throw std::runtime_error(std::format("Storehause of id {} cannot be used as link source.", data.source.id));
+            throw std::runtime_error(std::format("Storehouse of id {} cannot be used as link source.", data.source.id));
         }
         if (data.source.type == NodeType::RAMP)
         {
             if (auto found = _loadingRamps.find(data.source.id); found != _loadingRamps.end())
             {
-                sourceNode = found->second;
+                sourceNode = found->second.get();
             }
             else
             {
@@ -128,7 +123,7 @@ namespace sd
         {
             if (auto found = _workers.find(data.source.id); found != _workers.end())
             {
-                sourceNode = found->second;
+                sourceNode = found->second.get();
             }
             else
             {
@@ -136,62 +131,87 @@ namespace sd
             }
         }
 
-        if (data.sink.type == NodeType::RAMP)
+        if (data.destination.type == NodeType::RAMP)
         {
-            throw std::runtime_error(std::format("LoadingRamp of id {} cannot be used as link sink.", data.sink.id));
+            throw std::runtime_error(std::format("LoadingRamp of id {} cannot be used as link destination.", data.destination.id));
         }
-        if (data.sink.type == NodeType::STORE)
+        if (data.destination.type == NodeType::STORE)
         {
-            if (auto found = _storeHauses.find(data.sink.id); found != _storeHauses.end())
+            if (auto found = _storeHouses.find(data.destination.id); found != _storeHouses.end())
             {
-                sinkNode = found->second;
+                destinationNode = found->second.get();
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Storehause of id {} to be link sink.", data.sink.id));
+                throw std::runtime_error(std::format("Could not find Storehouse of id {} to be link destination.", data.destination.id));
             }
         }
         else // Worker
         {
-            if (auto found = _workers.find(data.sink.id); found != _workers.end())
+            if (auto found = _workers.find(data.destination.id); found != _workers.end())
             {
-                sinkNode = found->second;
+                destinationNode = found->second.get();
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Worker of id {} to be link sink.", data.source.id));
+                throw std::runtime_error(std::format("Could not find Worker of id {} to be link destination.", data.source.id));
             }
         }
 
-        auto res = _links.emplace(data.id, std::make_shared<Link>(data, sourceNode, sinkNode));
+        auto link = std::make_shared<Link>(data, *sourceNode, *destinationNode);
+        auto res = _links.emplace(data.id, link);
         if (!res.second)
         {
             throw std::runtime_error(std::format("Worker of id {} was already created.", data.id));
         }
-        res.first->second->bindLinks();
+        sourceNode->bindSourceLink(link);
+        destinationNode->bindDestinationLink(link);
     }
 
     void Factory::removeWorker(size_t id)
     {
-        _workers.erase(id);
+        if (auto workerPair = _workers.find(id); workerPair != _workers.end())
+        {
+            auto &worker = workerPair->second;
+            worker->unbindAllDestinations();
+            worker->unbindAllSources();
+            _workers.erase(workerPair);
+            removeExpiredLinks();
+        }
     }
 
     void Factory::removeLoadingRamp(size_t id)
     {
-        _loadingRamps.erase(id);
+        if (auto rampPair = _loadingRamps.find(id); rampPair != _loadingRamps.end())
+        {
+            auto &ramp = rampPair->second;
+            ramp->unbindAllSources();
+            _loadingRamps.erase(rampPair);
+            removeExpiredLinks();
+        }
     }
 
-    void Factory::removeStorehause(size_t id)
+    void Factory::removeStorehouse(size_t id)
     {
-        _storeHauses.erase(id);
+        if (auto storePair = _storeHouses.find(id); storePair != _storeHouses.end())
+        {
+            auto &store = storePair->second;
+            store->unbindAllDestinations();
+            _storeHouses.erase(storePair);
+            removeExpiredLinks();
+        }
     }
 
     void Factory::removeLink(size_t id)
     {
-        if(auto linkPair = _links.find(id); linkPair != _links.end()) {
-            auto& link = linkPair->second;
-            link->unBindSink();
-            link->unBindSource();
+        if (auto linkPair = _links.find(id); linkPair != _links.end())
+        {
+            auto link = linkPair->second.lock();
+            if (link)
+            {
+                link->unBindDestination();
+                link->unBindSource();
+            }
             _links.erase(linkPair);
         }
     }
@@ -216,12 +236,12 @@ namespace sd
         return res;
     }
 
-    const std::vector<StoreHauseData> Factory::getStorehausesData() const
+    const std::vector<StoreHouseData> Factory::getStorehousesData() const
     {
-        auto res = std::vector<StoreHauseData>(_storeHauses.size());
-        for (auto &store : _storeHauses)
+        auto res = std::vector<StoreHouseData>(_storeHouses.size());
+        for (auto &store : _storeHouses)
         {
-            res.emplace_back(store.second->getStoreHauseData());
+            res.emplace_back(store.second->getStoreHouseData());
         }
         return res;
     }
@@ -229,11 +249,21 @@ namespace sd
     const std::vector<LinkData> Factory::getLinksData() const
     {
         auto res = std::vector<LinkData>(_links.size());
-        for (auto &link : _links)
+        for (auto &linkWeak : _links)
         {
-            res.emplace_back(link.second->getLinkData());
+            auto link = linkWeak.second.lock();
+            if (link)
+            {
+                res.emplace_back(link->getLinkData());
+            }
         }
         return res;
+    }
+
+    size_t Factory::removeExpiredLinks()
+    {
+        return std::erase_if(_links, [](const std::pair<const size_t, sd::Link::WeakPtr> &item)
+                             { return item.second.expired(); });
     }
 
     void Factory::validate() const
@@ -241,40 +271,31 @@ namespace sd
         for (auto &workerPair : _workers)
         {
             auto &worker = workerPair.second;
-            if (!worker->getSourceLinksHub().connected())
+            if (!worker->connectedSources())
             {
                 throw std::runtime_error(std::format("Worker of id {} is not connected as source.", worker->getId()));
             }
-            if (!worker->getSinkLinksHub().connected())
+            if (!worker->connectedSources())
             {
-                throw std::runtime_error(std::format("Worker of id {} is not connected as sink.", worker->getId()));
+                throw std::runtime_error(std::format("Worker of id {} is not connected as destination.", worker->getId()));
             }
         }
 
         for (auto &rampPair : _loadingRamps)
         {
             auto &ramp = rampPair.second;
-            if (!ramp->getSourceLinksHub().connected())
+            if (!ramp->connectedSources())
             {
                 throw std::runtime_error(std::format("Ramp of id {} is not connected as source.", ramp->getId()));
             }
         }
 
-        for (auto &storeHausePair : _storeHauses)
+        for (auto &storeHousePair : _storeHouses)
         {
-            auto &store = storeHausePair.second;
-            if (!store->getSinkLinksHub().connected())
+            auto &store = storeHousePair.second;
+            if (!store->connectedDestinations())
             {
-                throw std::runtime_error(std::format("StoreHause of id {} is not connected as sink.", store->getId()));
-            }
-        }
-
-        for (auto &linkPair : _links)
-        {
-            auto &link = linkPair.second;
-            if (!link->connected())
-            {
-                throw std::runtime_error(std::format("Link of id {} is not connected.", link->getId()));
+                throw std::runtime_error(std::format("StoreHouse of id {} is not connected as destination.", store->getId()));
             }
         }
     }
@@ -289,9 +310,9 @@ namespace sd
             out << worker->getStateRaport(0) << dEnd{};
         }
         out << "== STOREHOUSES ==" << dEnd{};
-        for (auto &storeHausePair : _storeHauses)
+        for (auto &storeHousePair : _storeHouses)
         {
-            auto &store = storeHausePair.second;
+            auto &store = storeHousePair.second;
             out << store->getStateRaport(0) << dEnd{};
         }
         return out.str();
@@ -313,18 +334,20 @@ namespace sd
             out << worker->getStructureRaport(0) << dEnd{};
         }
         out << "== STOREHOUSES ==" << dEnd{};
-        for (auto &storeHausePair : _storeHauses)
+        for (auto &storeHousePair : _storeHouses)
         {
-            auto &store = storeHausePair.second;
+            auto &store = storeHousePair.second;
             out << store->getStructureRaport(0) << dEnd{};
         }
         return out.str();
     }
 
-    bool Factory::initialized() const { return _loadingRamps.empty() && _workers.empty() && _storeHauses.empty() && _links.empty(); }
+    bool Factory::initialized() const { return _loadingRamps.empty() && _workers.empty() && _storeHouses.empty() && _links.empty(); }
 
     void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportGuard)
     {
+        raportOutStream << "========= Factory Structure ========" << std::endl;
+        raportOutStream << generateStructureRaport() << std::endl;
         raportOutStream << "========= Simulation Start =========" << std::endl;
         for (size_t time = 0; time < maxIterations; ++time)
         {

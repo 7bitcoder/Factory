@@ -13,15 +13,16 @@ namespace sd
     {
         _app = std::make_unique<CLI::App>("Factory");
 
-        _app->add_option<decltype(_results.stateRaportTimings), std::vector<size_t>>(
+        auto raportTimings = _app->add_option<decltype(_results.stateRaportTimings), std::vector<size_t>>(
             "-t,--raportTimings",
             _results.stateRaportTimings,
             "State raport will be generater every iterations provided in list");
 
         _app->add_option<decltype(_results.stateRaportTimings), size_t>(
-            "-i,--raportInterval",
-            _results.stateRaportTimings,
-            "State raport will be generater every interval");
+                "-i,--raportInterval",
+                _results.stateRaportTimings,
+                "State raport will be generater every interval")
+            ->excludes(raportTimings);
 
         _app->add_option(
             "-r,--raportFile",
@@ -39,11 +40,6 @@ namespace sd
             "File that contains fabric structure");
         file->check(CLI::ExistingFile);
         file->required();
-
-        _app->add_flag(
-            "-s,--showStructureRaports",
-            _results.showStructureRaport,
-            "On every net modifications structure raport will be shown");
     }
 
     bool CommandParser::parse(int argc, char **argv, std::ostream &out, std::ostream &err)

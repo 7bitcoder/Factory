@@ -87,13 +87,13 @@ namespace sd
             [this]()
             { _factory->addLoadingRamp({id, deliveryInterval}); });
 
-        auto addStore = addCommands->add_subcommand("storehause", "Adds new storehause to factory")->alias("store");
-        addStore->add_option("-i,--id", id, "Storehause Id, must be unique for all storehauses in factory")
+        auto addStore = addCommands->add_subcommand("storehouse", "Adds new storehouse to factory")->alias("store");
+        addStore->add_option("-i,--id", id, "Storehouse Id, must be unique for all storehouses in factory")
             ->required();
 
         addStore->callback(
             [this]()
-            { _factory->addStorehause({id}); });
+            { _factory->addStorehouse({id}); });
 
         auto addLink = addCommands->add_subcommand("link", "Adds new link to factory");
         addLink->add_option("-i,--id", id, "Link Id, must be unique for all links in factory")
@@ -150,13 +150,13 @@ namespace sd
             [this]()
             { _factory->removeLoadingRamp(id); });
 
-        auto removeStore = removeCommands->add_subcommand("storehause", "Removes storehause from factory")->alias("store");
-        removeStore->add_option("-i,--id", id, "Storehause Id, must be unique for all storehauses in factory")
+        auto removeStore = removeCommands->add_subcommand("storehouse", "Removes storehouse from factory")->alias("store");
+        removeStore->add_option("-i,--id", id, "Storehouse Id, must be unique for all storehouses in factory")
             ->required();
 
         removeStore->callback(
             [this]()
-            { _factory->removeStorehause(id); });
+            { _factory->removeStorehouse(id); });
 
         auto removeLink = removeCommands->add_subcommand("link", "Removes link from factory");
         removeLink->add_option("-i,--id", id, "Link Id, must be unique for all links in factory")
@@ -198,6 +198,7 @@ namespace sd
         }
         getOut() << " ============================== STARTING SIMULATION ============================== " << std::endl;
         runSimulation(_config.raportFile, _config.maxIterations, {_config.stateRaportTimings});
+        getOut() << " ================================ SIMULATION ENDED =============================== " << std::endl;
     }
 
     void Controller::runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations, const Factory::RaportGuard &raportGuard)
