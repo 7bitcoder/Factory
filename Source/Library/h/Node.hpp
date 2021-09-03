@@ -11,8 +11,8 @@ namespace sd
 {
     class Node
         : public Identifiable,
-          public ToString,
-          public Type
+          public IToString,
+          public IType
     {
     public:
         using Ptr = std::shared_ptr<Node>;
@@ -21,16 +21,16 @@ namespace sd
 
     class SourceNode
         : virtual public Node,
-          virtual public StructureRaportable,
-          public ProductSource
+          virtual public IStructureRaportable,
+          public IProductSource
     {
     private:
         const size_t _processTime = 0;
         size_t _currentProcessTime = 0;
 
         std::vector<Link::Ptr> _links;
-
     public:
+
         using Ptr = std::shared_ptr<SourceNode>;
         using RawPtr = SourceNode *;
 
@@ -62,9 +62,9 @@ namespace sd
 
     class DestinationNode
         : virtual public Node,
-          virtual public StructureRaportable,
-          public StateRaportable,
-          public ProductDestination
+          virtual public IStructureRaportable,
+          public IStateRaportable,
+          public IProductDestination
     {
     private:
         std::deque<Product::Ptr> _storedProducts;
@@ -91,5 +91,7 @@ namespace sd
         bool connectedDestinations() const;
 
         void unbindAllDestinations();
+
+        size_t getStoredProducts() const;
     };
 }

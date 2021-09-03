@@ -31,30 +31,29 @@ namespace sd
 
     class Link final
         : public Identifiable,
-          public StructureRaportable,
-          public std::enable_shared_from_this<Link>
+          public IStructureRaportable
     {
     private:
         double _probability;
         const double _baseProbability;
-        SourceNode& _source;
-        DestinationNode& _destination;
+        SourceNode &_source;
+        DestinationNode &_destination;
 
     public:
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
-        Link(size_t id, double probability, SourceNode& source, DestinationNode& destination);
+        Link(size_t id, double probability, SourceNode &source, DestinationNode &destination);
 
-        Link(const LinkData &data, SourceNode& source, DestinationNode& destination);
+        Link(const LinkData &data, SourceNode &source, DestinationNode &destination);
 
         ~Link();
 
         const LinkData getLinkData() const;
 
-        SourceNode& getSource();
+        SourceNode &getSource();
 
-        DestinationNode& getDestination();
+        DestinationNode &getDestination();
 
         std::string getStructureRaport(size_t offset) const final;
 

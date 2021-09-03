@@ -3,29 +3,10 @@
 #include <sstream>
 
 #include "Node.hpp"
+#include "Random.hpp"
 
 namespace sd
 {
-    namespace
-    {
-        class Random
-        {
-        private:
-            std::random_device _rd;
-            std::default_random_engine _eng;
-            std::uniform_real_distribution<double> _distr;
-            Random() : _eng(_rd()), _distr(0, 1) {}
-
-        public:
-            static Random &get()
-            {
-                static Random r;
-                return r;
-            }
-            double nextDouble() { return _distr(_eng); }
-        };
-    }
-
     Node::Node(size_t id) : Identifiable(id) {}
 
     SourceNode::SourceNode(size_t id, size_t processTime) : Node(id), _processTime(processTime) {}
@@ -87,7 +68,7 @@ namespace sd
         {
             return nullptr;
         }
-        double propability = Random::get().nextDouble();
+        double propability = Random::get().next();
         double accumulate = 0;
         for (auto &link : _links)
         {
@@ -193,4 +174,6 @@ namespace sd
     }
 
     bool DestinationNode::connectedDestinations() const { return !_links.empty(); }
+
+    size_t DestinationNode::getStoredProducts() const { return _storedProducts.size(); }
 }

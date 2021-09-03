@@ -106,7 +106,7 @@ namespace sd
 
         if (data.source.type == NodeType::STORE)
         {
-            throw std::runtime_error(std::format("Storehouse of id {} cannot be used as link source.", data.source.id));
+            throw std::runtime_error("Storehouse cannot be used as link source.");
         }
         if (data.source.type == NodeType::RAMP)
         {
@@ -116,7 +116,7 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find LoadingRamp of id {} to be link source ", data.source.id));
+                throw std::runtime_error(std::format("Could not find LoadingRamp of id {} to be link source.", data.source.id));
             }
         }
         else // Worker
@@ -127,13 +127,13 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Worker of id {} to be link source ", data.source.id));
+                throw std::runtime_error(std::format("Could not find Worker of id {} to be link source.", data.source.id));
             }
         }
 
         if (data.destination.type == NodeType::RAMP)
         {
-            throw std::runtime_error(std::format("LoadingRamp of id {} cannot be used as link destination.", data.destination.id));
+            throw std::runtime_error("LoadingRamp cannot be used as link destination.");
         }
         if (data.destination.type == NodeType::STORE)
         {
@@ -154,7 +154,7 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Worker of id {} to be link destination.", data.source.id));
+                throw std::runtime_error(std::format("Could not find Worker of id {} to be link destination.", data.destination.id));
             }
         }
 
@@ -162,7 +162,7 @@ namespace sd
         auto res = _links.emplace(data.id, link);
         if (!res.second)
         {
-            throw std::runtime_error(std::format("Worker of id {} was already created.", data.id));
+            throw std::runtime_error(std::format("Link of id {} was already created.", data.id));
         }
         sourceNode->bindSourceLink(link);
         destinationNode->bindDestinationLink(link);
@@ -218,43 +218,47 @@ namespace sd
 
     const std::vector<WorkerData> Factory::getWorkersData() const
     {
-        auto res = std::vector<WorkerData>(_workers.size());
+        std::vector<WorkerData> res;
+        res.reserve(_workers.size());
         for (auto &worker : _workers)
         {
-            res.emplace_back(worker.second->getWorkerData());
+            res.push_back(worker.second->getWorkerData());
         }
         return res;
     }
 
     const std::vector<LoadingRampData> Factory::getLoadingRampsData() const
     {
-        auto res = std::vector<LoadingRampData>(_loadingRamps.size());
+        std::vector<LoadingRampData> res;
+        res.reserve(_loadingRamps.size());
         for (auto &ramps : _loadingRamps)
         {
-            res.emplace_back(ramps.second->getLoadingRampData());
+            res.push_back(ramps.second->getLoadingRampData());
         }
         return res;
     }
 
     const std::vector<StoreHouseData> Factory::getStorehousesData() const
     {
-        auto res = std::vector<StoreHouseData>(_storeHouses.size());
+        std::vector<StoreHouseData> res;
+        res.reserve(_storeHouses.size());
         for (auto &store : _storeHouses)
         {
-            res.emplace_back(store.second->getStoreHouseData());
+            res.push_back(store.second->getStoreHouseData());
         }
         return res;
     }
 
     const std::vector<LinkData> Factory::getLinksData() const
     {
-        auto res = std::vector<LinkData>(_links.size());
+        std::vector<LinkData> res;
+        res.reserve(_links.size());
         for (auto &linkWeak : _links)
         {
             auto link = linkWeak.second.lock();
             if (link)
             {
-                res.emplace_back(link->getLinkData());
+                res.push_back(link->getLinkData());
             }
         }
         return res;
@@ -342,7 +346,7 @@ namespace sd
         return out.str();
     }
 
-    bool Factory::initialized() const { return _loadingRamps.empty() && _workers.empty() && _storeHouses.empty() && _links.empty(); }
+    bool Factory::initialized() const { return !_loadingRamps.empty() || !_workers.empty() || !_storeHouses.empty() || !_links.empty(); }
 
     void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportGuard)
     {

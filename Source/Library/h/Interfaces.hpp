@@ -9,32 +9,36 @@ namespace sd
 {
     class Product;
 
-    struct ProductSource
+    struct IRandomDevice {
+        virtual double next() = 0;
+    };
+
+    struct IProductSource
     {
         virtual std::unique_ptr<Product> moveOutProduct() = 0;
     };
 
-    struct ProductDestination
+    struct IProductDestination
     {
         virtual void moveInProduct(std::unique_ptr<Product> &&product) = 0;
     };
 
-    struct ToString
+    struct IToString
     {
         virtual std::string toString() const = 0;
     };
 
-    struct Type
+    struct IType
     {
         virtual NodeType getNodeType() const = 0;
     };
 
-    struct StructureRaportable
+    struct IStructureRaportable
     {
         virtual std::string getStructureRaport(size_t offset) const = 0;
     };
 
-    struct StateRaportable
+    struct IStateRaportable
     {
         virtual std::string getStateRaport(size_t offset) const = 0;
     };

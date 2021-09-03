@@ -28,7 +28,7 @@ namespace sd
 
     const LinkData Link::getLinkData() const
     {
-        return {getId(), getProbability(), {_source.getId(), _source.getNodeType()}, {_destination.getId(), _destination.getNodeType()}};
+        return {getId(), getBaseProbability(), {_source.getId(), _source.getNodeType()}, {_destination.getId(), _destination.getNodeType()}};
     }
 
     Link::~Link() {}

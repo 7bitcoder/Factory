@@ -7,7 +7,7 @@
 
 namespace sd
 {
-    class Product final: public Identifiable, public ToString
+    class Product final: public Identifiable, public IToString
     {
     private:
         static size_t _idSeed;
