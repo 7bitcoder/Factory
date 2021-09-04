@@ -2,6 +2,7 @@
 
 #include "Node.hpp"
 #include "Link.hpp"
+#include "Processable.hpp"
 
 namespace sd
 {
@@ -13,7 +14,10 @@ namespace sd
         WorkerType type;
     };
 
-    class Worker final : public SourceNode, public DestinationNode
+    class Worker final
+        : public SourceNode,
+          public DestinationNode,
+          public Processable
     {
     private:
         WorkerType _type;
@@ -28,9 +32,7 @@ namespace sd
 
         const WorkerData getWorkerData() const;
 
-        Product::Ptr moveOutProduct() final;
-
-        void moveInProduct(Product::Ptr &&product) final;
+        void process(const size_t currentTime) final;
 
         std::string getStructureRaport(size_t offset) const final;
 
@@ -41,11 +43,13 @@ namespace sd
         NodeType getNodeType() const final;
 
         bool isProcessingProduct() const;
+
+    protected:
+        void triggerOperation() final;
+
     private:
         WorkerType getWorkerType() const;
 
         std::string getCurrentWorkRaport() const;
-
-        void getNextProductToProcess();
     };
 }

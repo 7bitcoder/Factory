@@ -6,9 +6,14 @@
 #include "Interfaces.hpp"
 #include "Configuration.hpp"
 
+namespace CLI
+{
+    class App;
+}
+
 namespace sd
 {
-    class Controller
+    class Controler
     {
     private:
         Factory::Ptr _factory;
@@ -19,8 +24,8 @@ namespace sd
         std::istream &_in;
 
     public:
-        Controller(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in);
-        ~Controller();
+        Controler(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in);
+        ~Controler();
 
         void run();
 

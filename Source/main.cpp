@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include "CommandParser.hpp"
-#include "Controller.hpp"
+#include "Controler.hpp"
 
 int main(int argc, char **argv)
 {
@@ -13,7 +13,7 @@ int main(int argc, char **argv)
         sd::CommandParser parser;
         if (parser.parse(argc, argv, out, err))
         {
-            sd::Controller c{parser.getResults(), out, err, in};
+            sd::Controler c{parser.getResults(), out, err, in};
             c.run();
         }
     }

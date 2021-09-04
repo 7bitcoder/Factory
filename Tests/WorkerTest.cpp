@@ -46,7 +46,7 @@ TEST_F(WorkerTest, StructureRaportTest)
     auto worker = std::make_unique<sd::Worker>(1, sd::WorkerType::FIFO, 3);
 
     auto expected = "WORKER #1\n\tProcessing time: 3\n\tQueue type: FIFO\n\tReceivers:\n";
-    
+
     EXPECT_EQ(worker->getStructureRaport(0), expected);
 }
 
@@ -71,7 +71,7 @@ TEST_F(WorkerTest, StructureRaportWithLinksTest)
     storeHouse->bindDestinationLink(link3);
 
     auto expected = "WORKER #1\n\tProcessing time: 3\n\tQueue type: FIFO\n\tReceivers:\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)\n\t\tSTOREHOUSE #1 (p = 0.33)";
-    
+
     EXPECT_EQ(worker1->getStructureRaport(0), expected);
 }
 
@@ -96,11 +96,13 @@ TEST_F(WorkerTest, StateRaportWithFilledQueueTest)
     auto expectedProduct2Id = product2->getId();
     auto expectedProduct3Id = product3->getId();
 
-    worker->moveInProduct(std::move(product1));
-    worker->moveInProduct(std::move(product2));
-    worker->moveInProduct(std::move(product3));
+    worker->addProductToStore(std::move(product1));
+    worker->addProductToStore(std::move(product2));
+    worker->addProductToStore(std::move(product3));
 
-    auto expected = std::format("WORKER #1\n\tQueue: #{} (pt = 0), #{}, #{}", expectedProduct1Id, expectedProduct2Id, expectedProduct3Id);
+    worker->process(0);
+
+    auto expected = std::format("WORKER #1\n\tQueue: #{} (pt = 1), #{}, #{}", expectedProduct1Id, expectedProduct2Id, expectedProduct3Id);
 
     EXPECT_EQ(worker->getStateRaport(0), expected);
 }
@@ -119,7 +121,9 @@ TEST_F(WorkerTest, MoveInProcessTest)
     auto product = std::make_unique<sd::Product>();
     auto expectedProductId = product->getId();
 
-    worker->moveInProduct(std::move(product));
+    worker->addProductToStore(std::move(product));
+
+    worker->process(0);
 
     EXPECT_FALSE(worker->areProductsAvailable());
     EXPECT_TRUE(worker->isProcessingProduct());
@@ -132,26 +136,22 @@ TEST_F(WorkerTest, GetProductTest)
     auto product1 = std::make_unique<sd::Product>();
     auto product2 = std::make_unique<sd::Product>();
     auto product3 = std::make_unique<sd::Product>();
-    
+
     auto expectedProduct1Id = product1->getId();
     auto expectedProduct2Id = product2->getId();
     auto expectedProduct3Id = product3->getId();
 
-    worker->moveInProduct(std::move(product1));
-    worker->moveInProduct(std::move(product2));
-    worker->moveInProduct(std::move(product3));
+    worker->addProductToStore(std::move(product1));
+    worker->addProductToStore(std::move(product2));
+    worker->addProductToStore(std::move(product3));
+
+    worker->process(0);
 
     EXPECT_TRUE(worker->areProductsAvailable());
+    EXPECT_TRUE(worker->isProcessingProduct());
 
-    EXPECT_EQ(worker->getProduct(false)->getId(), expectedProduct3Id);
-    EXPECT_EQ(worker->getProduct(true)->getId(), expectedProduct2Id);
-}
-
-TEST_F(WorkerTest, MoveOutTest)
-{
-    auto worker = std::make_unique<sd::Worker>(1, sd::WorkerType::FIFO, 3);
-
-    EXPECT_FALSE(worker->moveOutProduct());
+    EXPECT_EQ(worker->getStoredProduct(false)->getId(), expectedProduct3Id);
+    EXPECT_EQ(worker->getStoredProduct(true)->getId(), expectedProduct2Id);
 }
 
 TEST_F(WorkerTest, ProcessTest)
@@ -159,18 +159,45 @@ TEST_F(WorkerTest, ProcessTest)
     auto worker = std::make_unique<sd::Worker>(1, sd::WorkerType::FIFO, 3);
 
     auto product = std::make_unique<sd::Product>();
-    auto expectedProductId = product->getId();
 
-    worker->moveInProduct(std::move(product));
+    worker->addProductToStore(std::move(product));
     worker->process(0);
     worker->process(1);
+    worker->process(2);
     EXPECT_THROW(
         try
         {
-            worker->process(2);
+            worker->passProduct();
         } catch (const std::runtime_error &e)
         {
             EXPECT_STREQ("No links available", e.what());
+            throw;
+        },
+        std::runtime_error);
+}
+
+TEST_F(WorkerTest, ProcessFailTest)
+{
+    auto worker = std::make_unique<sd::Worker>(1, sd::WorkerType::FIFO, 3);
+
+    auto product = std::make_unique<sd::Product>();
+    auto product2 = std::make_unique<sd::Product>();
+
+    worker->addProductToStore(std::move(product));
+    worker->addProductToStore(std::move(product2));
+    
+    worker->process(0);
+    worker->process(1);
+    worker->process(2);
+    worker->process(3);
+    worker->process(4);
+    EXPECT_THROW(
+        try
+        {
+            worker->process(5);
+        } catch (const std::runtime_error &e)
+        {
+            EXPECT_STREQ("Simulation Error", e.what());
             throw;
         },
         std::runtime_error);

@@ -65,9 +65,9 @@ TEST_F(StoreHouseTest, StateRaportWithFilledQueueTest)
     auto expectedProduct2Id = product2->getId();
     auto expectedProduct3Id = product3->getId();
 
-    storeHouse->moveInProduct(std::move(product1));
-    storeHouse->moveInProduct(std::move(product2));
-    storeHouse->moveInProduct(std::move(product3));
+    storeHouse->addProductToStore(std::move(product1));
+    storeHouse->addProductToStore(std::move(product2));
+    storeHouse->addProductToStore(std::move(product3));
 
     auto expected = std::format("STOREHOUSE #1\n\tQueue: #{}, #{}, #{}", expectedProduct1Id, expectedProduct2Id, expectedProduct3Id);
 
@@ -88,10 +88,10 @@ TEST_F(StoreHouseTest, MoveInTest)
     auto product = std::make_unique<sd::Product>();
     auto expectedProductId = product->getId();
 
-    storeHouse->moveInProduct(std::move(product));
+    storeHouse->addProductToStore(std::move(product));
 
     EXPECT_TRUE(storeHouse->areProductsAvailable());
-    EXPECT_EQ(storeHouse->getProduct()->getId(), expectedProductId);
+    EXPECT_EQ(storeHouse->getStoredProduct()->getId(), expectedProductId);
 }
 
 TEST_F(StoreHouseTest, GetProductTest)
@@ -106,13 +106,13 @@ TEST_F(StoreHouseTest, GetProductTest)
     auto expectedProduct2Id = product2->getId();
     auto expectedProduct3Id = product3->getId();
 
-    storeHouse->moveInProduct(std::move(product1));
-    storeHouse->moveInProduct(std::move(product2));
-    storeHouse->moveInProduct(std::move(product3));
+    storeHouse->addProductToStore(std::move(product1));
+    storeHouse->addProductToStore(std::move(product2));
+    storeHouse->addProductToStore(std::move(product3));
 
     EXPECT_TRUE(storeHouse->areProductsAvailable());
 
-    EXPECT_EQ(storeHouse->getProduct(false)->getId(), expectedProduct3Id);
-    EXPECT_EQ(storeHouse->getProduct(true)->getId(), expectedProduct1Id);
-    EXPECT_EQ(storeHouse->getProduct(false)->getId(), expectedProduct2Id);
+    EXPECT_EQ(storeHouse->getStoredProduct(false)->getId(), expectedProduct3Id);
+    EXPECT_EQ(storeHouse->getStoredProduct(true)->getId(), expectedProduct1Id);
+    EXPECT_EQ(storeHouse->getStoredProduct(false)->getId(), expectedProduct2Id);
 }

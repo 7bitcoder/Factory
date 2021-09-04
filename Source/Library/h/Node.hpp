@@ -21,12 +21,10 @@ namespace sd
 
     class SourceNode
         : virtual public Node,
-          virtual public IStructureRaportable,
-          public IProductSource
+          virtual public IStructureRaportable
     {
     private:
-        const size_t _processTime = 0;
-        size_t _currentProcessTime = 0;
+        Product::Ptr _product;
 
         std::vector<Link::Ptr> _links;
     public:
@@ -34,26 +32,22 @@ namespace sd
         using Ptr = std::shared_ptr<SourceNode>;
         using RawPtr = SourceNode *;
 
-        SourceNode(size_t id, size_t processTime);
+        SourceNode(size_t id);
 
-        size_t getProcesingTime() const;
-        size_t getCurrentProcesingTime() const;
+        void setProduct(Product::Ptr &&product);
 
-        void process(const size_t currentTime);
+        void passProduct();
 
-        void resetProcessTime();
+        std::string getStructureRaport(size_t offset) const override;
 
         void bindSourceLink(Link::Ptr link);
         void unBindSourceLink(size_t id);
-
-        void passProduct(Product::Ptr &&product);
-
-        std::string getStructureRaport(size_t offset) const override;
 
         bool connectedSources() const;
 
         void unbindAllSources();
 
+        bool isProductReady() const;
     private:
         void normalize();
 
@@ -63,8 +57,7 @@ namespace sd
     class DestinationNode
         : virtual public Node,
           virtual public IStructureRaportable,
-          public IStateRaportable,
-          public IProductDestination
+          public IStateRaportable
     {
     private:
         std::deque<Product::Ptr> _storedProducts;
@@ -77,13 +70,11 @@ namespace sd
 
         DestinationNode(size_t id);
 
-        void moveInProduct(Product::Ptr &&product) override;
+        void addProductToStore(Product::Ptr &&product);
 
-        std::string getStoredProductsRaport() const;
+        Product::Ptr getStoredProduct(bool first = false);
 
-        bool areProductsAvailable() const;
-
-        Product::Ptr getProduct(bool first = false);
+        std::string getStateRaport(size_t offset) const override;
 
         void bindDestinationLink(Link::Ptr link);
         void unBindDestinationLink(size_t id);
@@ -92,6 +83,7 @@ namespace sd
 
         void unbindAllDestinations();
 
-        size_t getStoredProducts() const;
+        bool areProductsAvailable() const;
+        size_t getStoredProductsSize() const;
     };
 }

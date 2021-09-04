@@ -34,8 +34,8 @@ namespace sd
           public IStructureRaportable
     {
     private:
-        double _probability;
         const double _baseProbability;
+        double _probability;
         SourceNode &_source;
         DestinationNode &_destination;
 
@@ -44,15 +44,11 @@ namespace sd
         using WeakPtr = std::weak_ptr<Link>;
 
         Link(size_t id, double probability, SourceNode &source, DestinationNode &destination);
-
         Link(const LinkData &data, SourceNode &source, DestinationNode &destination);
-
-        ~Link();
 
         const LinkData getLinkData() const;
 
         SourceNode &getSource();
-
         DestinationNode &getDestination();
 
         std::string getStructureRaport(size_t offset) const final;
@@ -60,11 +56,9 @@ namespace sd
         double getBaseProbability() const;
 
         double getProbability() const;
-
         void setProbability(double newProbability);
 
         void unBindSource();
-
         void unBindDestination();
     };
 }

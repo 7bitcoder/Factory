@@ -9,7 +9,7 @@ namespace sd
 {
     StoreHouse::StoreHouse(size_t id) : DestinationNode(id), Node(id) {}
 
-    StoreHouse::StoreHouse(const StoreHouseData &data) : DestinationNode(data.id), Node(data.id) {}
+    StoreHouse::StoreHouse(const StoreHouseData &data) : StoreHouse(data.id) {}
 
     std::string StoreHouse::getStructureRaport(size_t offset) const { return toString(); }
 
@@ -17,7 +17,7 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset) << toString() << std::endl;
-        out << getOffset(++offset) << "Queue: " << getStoredProductsRaport();
+        out << getOffset(++offset) << "Queue: " << DestinationNode::getStateRaport(offset);
         return out.str();
     };
 

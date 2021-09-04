@@ -3,7 +3,7 @@
 #include <format>
 
 #include "CLI11.hpp"
-#include "Controller.hpp"
+#include "Controler.hpp"
 #include "Utils.hpp"
 
 namespace sd
@@ -48,7 +48,7 @@ namespace sd
         }
     }
 
-    Controller::Controller(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in)
+    Controler::Controler(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in)
         : _config(config),
           _out(out),
           _in(in),
@@ -57,9 +57,9 @@ namespace sd
         buildCommandLineInterface();
     }
 
-    Controller::~Controller() {}
+    Controler::~Controler() {}
 
-    void Controller::buildCommandLineInterface()
+    void Controler::buildCommandLineInterface()
     {
         _cli = std::make_unique<CLI::App>("CLI");
 
@@ -167,13 +167,13 @@ namespace sd
             { _factory->removeLink(id); });
     }
 
-    void Controller::run()
+    void Controler::run()
     {
         getOut() << " ============================ FACTORY SIMULATOR v 0.1 ============================ " << std::endl;
         _factory = createFactory(_config.structureFile);
-        if (_factory->initialized())
+        if (!_factory->initialized())
         {
-            getOut() << ">> factory structure is not initialized please add new elelemts to factory using cli, type -h for help <<" << std::endl;
+            getOut() << "Factory structure is not initialized please add new elelemts to factory using cli, type -h for help" << std::endl;
         }
         _factory->validate();
         for (std::string line; !breakFromCliMode;)
@@ -201,7 +201,7 @@ namespace sd
         getOut() << " ================================ SIMULATION ENDED =============================== " << std::endl;
     }
 
-    void Controller::runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations, const Factory::RaportGuard &raportGuard)
+    void Controler::runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations, const Factory::RaportGuard &raportGuard)
     {
         if (raportfilePath)
         {
@@ -214,10 +214,10 @@ namespace sd
         }
     }
 
-    std::ostream &Controller::getOut() { return _out; }
+    std::ostream &Controler::getOut() { return _out; }
 
-    std::ostream &Controller::getErr() { return _err; }
+    std::ostream &Controler::getErr() { return _err; }
 
-    std::istream &Controller::getIn() { return _in; }
+    std::istream &Controler::getIn() { return _in; }
 
 }

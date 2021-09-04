@@ -26,7 +26,7 @@ namespace sd
             std::variant<Interval, RaportTimes> _raportTimes;
 
         public:
-            RaportGuard(std::variant<size_t, std::vector<size_t>> &var);
+            RaportGuard(const std::variant<size_t, std::vector<size_t>> &var);
 
             bool isRaportTime(size_t currentIteration) const;
         };

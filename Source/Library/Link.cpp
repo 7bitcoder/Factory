@@ -31,8 +31,6 @@ namespace sd
         return {getId(), getBaseProbability(), {_source.getId(), _source.getNodeType()}, {_destination.getId(), _destination.getNodeType()}};
     }
 
-    Link::~Link() {}
-
     double Link::getProbability() const { return _probability; }
 
     double Link::getBaseProbability() const { return _baseProbability; }

@@ -8,35 +8,10 @@
 namespace sd
 {
     Worker::Worker(size_t id, WorkerType type, size_t processingTime)
-        : SourceNode(id, processingTime), DestinationNode(id), _type(type), Node(id) {}
+        : SourceNode(id), Processable(processingTime), DestinationNode(id), _type(type), Node(id) {}
 
     Worker::Worker(const WorkerData &data)
-        : SourceNode(data.id, data.processingTime), DestinationNode(data.id), _type(data.type), Node(data.id) {}
-
-    Product::Ptr Worker::moveOutProduct()
-    {
-        auto ptr = std::move(_currentProduct);
-        if (areProductsAvailable())
-        {
-            getNextProductToProcess();
-        }
-        return std::move(ptr);
-    }
-
-    void Worker::moveInProduct(Product::Ptr &&product)
-    {
-        DestinationNode::moveInProduct(std::move(product));
-        if (!isProcessingProduct())
-        {
-            getNextProductToProcess();
-        }
-    }
-
-    void Worker::getNextProductToProcess()
-    {
-        _currentProduct = std::move(getProduct(_type == WorkerType::LIFO));
-        resetProcessTime();
-    }
+        : Worker(data.id, data.type, data.processingTime) {}
 
     bool Worker::isProcessingProduct() const { return bool{_currentProduct}; }
 
@@ -44,7 +19,7 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset++) << toString() << std::endl;
-        out << getOffset(offset) << "Processing time: " << getProcesingTime() << std::endl;
+        out << getOffset(offset) << "Processing time: " << getTotalProcesingTime() << std::endl;
         out << getOffset(offset) << "Queue type: " << sd::toString(getWorkerType()) << std::endl;
         out << SourceNode::getStructureRaport(offset);
         return out.str();
@@ -54,7 +29,7 @@ namespace sd
     {
         std::stringstream out;
         out << getOffset(offset) << toString() << std::endl;
-        out << getOffset(++offset) << "Queue: " << getCurrentWorkRaport() << getStoredProductsRaport();
+        out << getOffset(++offset) << "Queue: " << getCurrentWorkRaport() << DestinationNode::getStateRaport(offset);
         return out.str();
     };
 
@@ -67,7 +42,37 @@ namespace sd
 
     NodeType Worker::getNodeType() const { return NodeType::WORKER; }
 
+    void Worker::process(const size_t currentTime)
+    {
+        if (!isProcessingProduct())
+        {
+            if (areProductsAvailable())
+            {
+                _currentProduct = std::move(getStoredProduct(_type == WorkerType::FIFO));
+                reset();
+            }
+        }
+        if (isProcessingProduct())
+        {
+            Processable::process(currentTime);
+        }
+    }
+
+    void Worker::triggerOperation()
+    {
+        setProduct(std::move(_currentProduct));
+        if (areProductsAvailable())
+        {
+            _currentProduct = std::move(getStoredProduct(_type == WorkerType::FIFO));
+            reset();
+        }
+        else
+        {
+            stop();
+        }
+    }
+
     WorkerType Worker::getWorkerType() const { return _type; }
 
-    const WorkerData Worker::getWorkerData() const { return {getId(), getProcesingTime(), getWorkerType()}; }
+    const WorkerData Worker::getWorkerData() const { return {getId(), getTotalProcesingTime(), getWorkerType()}; }
 }

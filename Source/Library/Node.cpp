@@ -9,31 +9,44 @@ namespace sd
 {
     Node::Node(size_t id) : Identifiable(id) {}
 
-    SourceNode::SourceNode(size_t id, size_t processTime) : Node(id), _processTime(processTime) {}
+    SourceNode::SourceNode(size_t id) : Node(id) {}
 
-    size_t SourceNode::getProcesingTime() const { return _processTime; }
-
-    size_t SourceNode::getCurrentProcesingTime() const { return _currentProcessTime; }
-
-    void SourceNode::process(const size_t currentTime)
+    void SourceNode::setProduct(Product::Ptr &&product)
     {
-        if (++_currentProcessTime >= _processTime)
+        if (_product)
         {
-            auto ptr = moveOutProduct();
-            if (ptr)
-            {
-                passProduct(std::move(ptr));
-            }
-            resetProcessTime();
+            throw std::runtime_error("Simulation Error");
         }
+        _product = std::move(product);
     }
 
-    void SourceNode::unbindAllSources()
+    void SourceNode::passProduct()
     {
+        if (!isProductReady())
+        {
+            return;
+        }
+        auto link = getRandomLink();
+        if (!link)
+        {
+            throw std::runtime_error("No links available");
+        }
+        link->getDestination().addProductToStore(std::move(_product));
+    }
+
+    std::string SourceNode::getStructureRaport(size_t offset) const
+    {
+        std::stringstream out;
+        out << getOffset(offset++) << "Receivers:" << std::endl;
         for (auto &link : _links)
         {
-            link->unBindDestination();
+            out << link->getStructureRaport(offset);
+            if (link != _links.back())
+            {
+                out << std::endl;
+            }
         }
+        return out.str();
     }
 
     void SourceNode::bindSourceLink(Link::Ptr link)
@@ -50,17 +63,17 @@ namespace sd
         normalize();
     }
 
-    void SourceNode::passProduct(Product::Ptr &&product)
+    bool SourceNode::connectedSources() const { return !_links.empty(); }
+
+    void SourceNode::unbindAllSources()
     {
-        auto link = getRandomLink();
-        if (!link)
+        for (auto &link : _links)
         {
-            throw std::runtime_error("No links available");
+            link->unBindDestination();
         }
-        link->getDestination().moveInProduct(std::move(product));
     }
 
-    bool SourceNode::connectedSources() const { return !_links.empty(); }
+    bool SourceNode::isProductReady() const { return bool{_product}; }
 
     Link::Ptr SourceNode::getRandomLink() const
     {
@@ -96,33 +109,14 @@ namespace sd
         }
     }
 
-    std::string SourceNode::getStructureRaport(size_t offset) const
-    {
-        std::stringstream out;
-        out << getOffset(offset++) << "Receivers:" << std::endl;
-        for (auto &link : _links)
-        {
-            out << link->getStructureRaport(offset);
-            if (link != _links.back())
-            {
-                out << std::endl;
-            }
-        }
-        return out.str();
-    }
-
-    void SourceNode::resetProcessTime() { _currentProcessTime = 0; }
-
     DestinationNode::DestinationNode(size_t id) : Node(id) {}
 
-    void DestinationNode::moveInProduct(Product::Ptr &&product)
+    void DestinationNode::addProductToStore(Product::Ptr &&product)
     {
         _storedProducts.emplace_back(std::move(product));
     }
 
-    bool DestinationNode::areProductsAvailable() const { return !_storedProducts.empty(); }
-
-    Product::Ptr DestinationNode::getProduct(bool first)
+    Product::Ptr DestinationNode::getStoredProduct(bool first)
     {
         if (!areProductsAvailable())
         {
@@ -142,7 +136,7 @@ namespace sd
         return std::move(result);
     }
 
-    std::string DestinationNode::getStoredProductsRaport() const
+    std::string DestinationNode::getStateRaport(size_t offset) const
     {
         std::stringstream out;
         for (auto &product : _storedProducts)
@@ -156,14 +150,6 @@ namespace sd
         return out.str();
     }
 
-    void DestinationNode::unbindAllDestinations()
-    {
-        for (auto &link : _links)
-        {
-            link->unBindSource();
-        }
-    }
-
     void DestinationNode::bindDestinationLink(Link::Ptr link) { _links.emplace_back(link); }
 
     void DestinationNode::unBindDestinationLink(size_t id)
@@ -175,5 +161,15 @@ namespace sd
 
     bool DestinationNode::connectedDestinations() const { return !_links.empty(); }
 
-    size_t DestinationNode::getStoredProducts() const { return _storedProducts.size(); }
+    void DestinationNode::unbindAllDestinations()
+    {
+        for (auto &link : _links)
+        {
+            link->unBindSource();
+        }
+    }
+
+    bool DestinationNode::areProductsAvailable() const { return getStoredProductsSize() > 0; }
+
+    size_t DestinationNode::getStoredProductsSize() const { return _storedProducts.size(); }
 }

@@ -68,7 +68,7 @@ TEST_F(LoadingRampTest, StructureRaportWithLinksTest)
     worker3->bindDestinationLink(link3);
 
     auto expected = "LOADING_RAMP #1\n\tDelivery interval: 2\n\tReceivers:\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)";
-    
+
     EXPECT_EQ(loadingRamp->getStructureRaport(0), expected);
 }
 
@@ -79,25 +79,38 @@ TEST_F(LoadingRampTest, NodeTypeTest)
     EXPECT_EQ(loadingRamp->getNodeType(), sd::NodeType::RAMP);
 }
 
-TEST_F(LoadingRampTest, MoveOutTest)
-{
-    auto loadingRamp = std::make_unique<sd::LoadingRamp>(1, 2);
-
-    EXPECT_TRUE(loadingRamp->moveOutProduct());
-}
-
 TEST_F(LoadingRampTest, ProcessTest)
 {
     auto loadingRamp = std::make_unique<sd::LoadingRamp>(1, 2);
 
     loadingRamp->process(0);
+    loadingRamp->process(1);
     EXPECT_THROW(
         try
         {
-            loadingRamp->process(1);
+            loadingRamp->passProduct();
         } catch (const std::runtime_error &e)
         {
             EXPECT_STREQ("No links available", e.what());
+            throw;
+        },
+        std::runtime_error);
+}
+
+TEST_F(LoadingRampTest, ProcessFailTest)
+{
+    auto loadingRamp = std::make_unique<sd::LoadingRamp>(1, 2);
+
+    loadingRamp->process(0);
+    loadingRamp->process(1);
+    loadingRamp->process(2);
+    EXPECT_THROW(
+        try
+        {
+        loadingRamp->process(3);
+        } catch (const std::runtime_error &e)
+        {
+            EXPECT_STREQ("Simulation Error", e.what());
             throw;
         },
         std::runtime_error);

@@ -4,6 +4,7 @@
 #include "Product.hpp"
 #include "Link.hpp"
 #include "Node.hpp"
+#include "Processable.hpp"
 
 namespace sd
 {
@@ -14,7 +15,7 @@ namespace sd
         size_t deliveryInterval;
     };
 
-    class LoadingRamp final : public SourceNode
+    class LoadingRamp final : public SourceNode, public Processable
     {
     public:
         using Ptr = std::unique_ptr<LoadingRamp>;
@@ -25,13 +26,14 @@ namespace sd
 
         const LoadingRampData getLoadingRampData() const;
 
-        Product::Ptr moveOutProduct() final;
-
         std::string getStructureRaport(size_t offset) const final;
 
         std::string toString() const final;
 
         NodeType getNodeType() const final;
+
+    protected:
+        void triggerOperation() final;
 
     private:
         Product::Ptr createProduct() const;

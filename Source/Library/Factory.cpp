@@ -16,15 +16,28 @@ namespace sd
                 << std::endl;
             return out;
         }
+
+        void processItem(Processable &item, size_t currentTime)
+        {
+            item.process(currentTime);
+        }
+
+        void tryPassProducts(SourceNode &node)
+        {
+            if (node.isProductReady())
+            {
+                node.passProduct();
+            }
+        }
     }
 
-    Factory::RaportGuard::RaportGuard(std::variant<size_t, std::vector<size_t>> &var)
+    Factory::RaportGuard::RaportGuard(const std::variant<size_t, std::vector<size_t>> &var)
     {
-        if (size_t *intervalPtr = std::get_if<size_t>(&var))
+        if (const size_t *intervalPtr = std::get_if<size_t>(&var))
         {
             _raportTimes = *intervalPtr;
         }
-        else if (std::vector<size_t> *raportTimesPtr = std::get_if<std::vector<size_t>>(&var))
+        else if (const std::vector<size_t> *raportTimesPtr = std::get_if<std::vector<size_t>>(&var))
         {
             auto &raportTimes = *raportTimesPtr;
             _raportTimes = RaportTimes{std::move(raportTimes), 0};
@@ -220,9 +233,9 @@ namespace sd
     {
         std::vector<WorkerData> res;
         res.reserve(_workers.size());
-        for (auto &worker : _workers)
+        for (auto &[_, worker] : _workers)
         {
-            res.push_back(worker.second->getWorkerData());
+            res.push_back(worker->getWorkerData());
         }
         return res;
     }
@@ -231,9 +244,9 @@ namespace sd
     {
         std::vector<LoadingRampData> res;
         res.reserve(_loadingRamps.size());
-        for (auto &ramps : _loadingRamps)
+        for (auto &[_, ramp] : _loadingRamps)
         {
-            res.push_back(ramps.second->getLoadingRampData());
+            res.push_back(ramp->getLoadingRampData());
         }
         return res;
     }
@@ -253,12 +266,11 @@ namespace sd
     {
         std::vector<LinkData> res;
         res.reserve(_links.size());
-        for (auto &linkWeak : _links)
+        for (auto &[_, link] : _links)
         {
-            auto link = linkWeak.second.lock();
-            if (link)
+            if (!link.expired())
             {
-                res.push_back(link->getLinkData());
+                res.push_back(link.lock()->getLinkData());
             }
         }
         return res;
@@ -272,31 +284,28 @@ namespace sd
 
     void Factory::validate() const
     {
-        for (auto &workerPair : _workers)
+        for (auto &[_, worker] : _workers)
         {
-            auto &worker = workerPair.second;
             if (!worker->connectedSources())
             {
                 throw std::runtime_error(std::format("Worker of id {} is not connected as source.", worker->getId()));
             }
-            if (!worker->connectedSources())
+            if (!worker->connectedDestinations())
             {
                 throw std::runtime_error(std::format("Worker of id {} is not connected as destination.", worker->getId()));
             }
         }
 
-        for (auto &rampPair : _loadingRamps)
+        for (auto &[_, ramp] : _loadingRamps)
         {
-            auto &ramp = rampPair.second;
             if (!ramp->connectedSources())
             {
                 throw std::runtime_error(std::format("Ramp of id {} is not connected as source.", ramp->getId()));
             }
         }
 
-        for (auto &storeHousePair : _storeHouses)
+        for (auto &[_, store] : _storeHouses)
         {
-            auto &store = storeHousePair.second;
             if (!store->connectedDestinations())
             {
                 throw std::runtime_error(std::format("StoreHouse of id {} is not connected as destination.", store->getId()));
@@ -308,15 +317,13 @@ namespace sd
     {
         std::stringstream out;
         out << "== WORKERS ==" << dEnd{};
-        for (auto &workerPair : _workers)
+        for (auto &[_, worker] : _workers)
         {
-            auto &worker = workerPair.second;
             out << worker->getStateRaport(0) << dEnd{};
         }
         out << "== STOREHOUSES ==" << dEnd{};
-        for (auto &storeHousePair : _storeHouses)
+        for (auto &[_, store] : _storeHouses)
         {
-            auto &store = storeHousePair.second;
             out << store->getStateRaport(0) << dEnd{};
         }
         return out.str();
@@ -326,21 +333,18 @@ namespace sd
     {
         std::stringstream out;
         out << "== LOADING RAMPS ==" << dEnd{};
-        for (auto &rampPair : _loadingRamps)
+        for (auto &[_, ramp] : _loadingRamps)
         {
-            auto &ramp = rampPair.second;
             out << ramp->getStructureRaport(0) << dEnd{};
         }
         out << "== WORKERS ==" << dEnd{};
-        for (auto &workerPair : _workers)
+        for (auto &[_, worker] : _workers)
         {
-            auto &worker = workerPair.second;
             out << worker->getStructureRaport(0) << dEnd{};
         }
         out << "== STOREHOUSES ==" << dEnd{};
-        for (auto &storeHousePair : _storeHouses)
+        for (auto &[_, store] : _storeHouses)
         {
-            auto &store = storeHousePair.second;
             out << store->getStructureRaport(0) << dEnd{};
         }
         return out.str();
@@ -355,14 +359,23 @@ namespace sd
         raportOutStream << "========= Simulation Start =========" << std::endl;
         for (size_t time = 0; time < maxIterations; ++time)
         {
-            for (auto &ramp : _loadingRamps)
+            for (auto &[_, ramp] : _loadingRamps)
             {
-                ramp.second->process(time);
+                processItem(*ramp, time);
             }
-            for (auto &ramp : _workers)
+            for (auto &[_, ramp] : _loadingRamps)
             {
-                ramp.second->process(time);
+                tryPassProducts(*ramp);
             }
+            for (auto &[_, worker] : _workers)
+            {
+                tryPassProducts(*worker);
+            }
+            for (auto &[_, worker] : _workers)
+            {
+                processItem(*worker, time);
+            }
+
             if (raportGuard.isRaportTime(time))
             {
                 raportOutStream << std::format("========= Iteration: {} =========", time) << std::endl;
