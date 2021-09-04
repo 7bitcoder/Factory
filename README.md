@@ -1,2 +1,2 @@
-# CPlusPlusLibraries
-experimantal header libraries, my implementations of algorithms, data structures and so on 
+# Factory Simulator
+simple program simulating factory nodes: worker, ramp, store
