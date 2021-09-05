@@ -62,7 +62,7 @@ TEST_F(LinkTest, BadCreateTest)
         {
             sd::LoadingRamp ramp{3};
             sd::StoreHouse store{2};
-            std::make_unique<sd::Link>(1, 0.5, ramp, store);
+            auto ptr = std::make_unique<sd::Link>(1, 0.5, ramp, store);
         } catch (const std::runtime_error &e)
         {
             EXPECT_STREQ("Cannot bind Ramp and Store.", e.what());
@@ -78,7 +78,7 @@ TEST_F(LinkTest, BadCreateZeroProbabilityTest)
         {
             sd::Worker worker{3};
             sd::StoreHouse store{2};
-            std::make_unique<sd::Link>(1, 0, worker, store);
+            auto ptr = std::make_unique<sd::Link>(1, 0, worker, store);
         } catch (const std::runtime_error &e)
         {
             EXPECT_STREQ("Probability Cannot be set to 0.", e.what());
