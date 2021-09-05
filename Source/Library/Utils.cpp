@@ -1,17 +1,26 @@
-#include <string>
-#include <sstream>
 #include <format>
+#include <sstream>
+#include <string>
 
-#include "Utils.hpp"
+
 #include "Factory.hpp"
+#include "Utils.hpp"
+
 
 namespace sd
 {
     namespace
     {
-        const std::string linkPattern = "LINK id=<id> src=<type>-<id> dest=<type>-<id> p=<probability>, where id is unique indentificator, <type> is one of following: ramp/worker/store and <probability> is in range <0:1>";
-        const std::string workPattern = "WORKER id=<worker-id> processing-time=<processing-time> queue-type=<queuetype>, where id is unique indentificator, <processing-time> number grather than zero describing time of processing the product by worker and <queue-type> 0 - LIFO, 1 - FIFO describind worker processing mode";
-        const std::string rampPattern = "LOADING_RAMP id=<ramp-id> delivery-interval=<delivery-interval>, where id is unique indentificator, <delivery-interval> number grather than zero describing time of delivering the product by ramp";
+        const std::string linkPattern =
+            "LINK id=<id> src=<type>-<id> dest=<type>-<id> p=<probability>, where id is unique indentificator, <type> "
+            "is one of following: ramp/worker/store and <probability> is in range <0:1>";
+        const std::string workPattern =
+            "WORKER id=<worker-id> processing-time=<processing-time> queue-type=<queuetype>, where id is unique "
+            "indentificator, <processing-time> number grather than zero describing time of processing the product by "
+            "worker and <queue-type> 0 - LIFO, 1 - FIFO describind worker processing mode";
+        const std::string rampPattern =
+            "LOADING_RAMP id=<ramp-id> delivery-interval=<delivery-interval>, where id is unique indentificator, "
+            "<delivery-interval> number grather than zero describing time of delivering the product by ramp";
         const std::string storePattern = "STOREHOUSE id=<storehouse-id>, where id is unique indentificator";
 
         void checkSize(size_t actual, size_t expected, const std::string &msg)
@@ -27,7 +36,9 @@ namespace sd
             auto splitted = splitStr(word, '=');
             if (splitted.size() != 2)
             {
-                throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<id>, where <id> is idenfificator number grather than zero", word));
+                throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: id=<id>, where "
+                                                     "<id> is idenfificator number grather than zero",
+                                                     word));
             }
 
             return std::stoull(splitted[1]);
@@ -100,12 +111,18 @@ namespace sd
                 }
                 else if (word.starts_with("src="))
                 {
-                    result.source = getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: src=type-id, where type is one of ramp, worker and id is identifier", word));
+                    result.source =
+                        getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: src=type-id, "
+                                                      "where type is one of ramp, worker and id is identifier",
+                                                      word));
                     define(scrCheck, word);
                 }
                 else if (word.starts_with("dest="))
                 {
-                    result.destination = getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, where type is one of store, worker and id is identifier", word));
+                    result.destination =
+                        getLinkBind(word, std::format("Sentence: \"{}\", expected to fit this pattern: dest=type-id, "
+                                                      "where type is one of store, worker and id is identifier",
+                                                      word));
                     define(destCheck, word);
                 }
                 else if (word.starts_with("p"))
@@ -141,7 +158,8 @@ namespace sd
                     auto splitted = splitStr(word, '=');
                     if (splitted.size() != 2)
                     {
-                        throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: processing-time=<processing-time>", word));
+                        throw std::runtime_error(std::format(
+                            "Sentence: \"{}\", expected to fit this pattern: processing-time=<processing-time>", word));
                     }
 
                     result.processingTime = std::stoull(splitted[1]);
@@ -157,7 +175,8 @@ namespace sd
                     auto splitted = splitStr(word, '=');
                     if (splitted.size() != 2)
                     {
-                        throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
+                        throw std::runtime_error(std::format(
+                            "Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
                     }
 
                     if (splitted[1] == "FIFO")
@@ -170,7 +189,8 @@ namespace sd
                     }
                     else
                     {
-                        throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
+                        throw std::runtime_error(std::format(
+                            "Sentence: \"{}\", expected to fit this pattern: queue-type=<queuetype>", word));
                     }
                     define(typeCheck, word);
                 }
@@ -199,7 +219,9 @@ namespace sd
                     auto splitted = splitStr(word, '=');
                     if (splitted.size() != 2)
                     {
-                        throw std::runtime_error(std::format("Sentence: \"{}\", expected to fit this pattern: delivery-interval=<delivery-interval>", word));
+                        throw std::runtime_error(std::format(
+                            "Sentence: \"{}\", expected to fit this pattern: delivery-interval=<delivery-interval>",
+                            word));
                     }
 
                     result.deliveryInterval = std::stoi(splitted[1]);
@@ -242,7 +264,7 @@ namespace sd
             checkDefine(idCheck, "id");
             return result;
         }
-    }
+    } // namespace
 
     std::vector<std::string> splitStr(const std::string &str, char splitChar)
     {
@@ -309,38 +331,40 @@ namespace sd
 
     std::ostream &operator<<(std::ostream &stream, const Factory &factory)
     {
-        stream << "; == LOADING RAMPS ==" << std::endl
-               << std::endl;
+        stream << "; == LOADING RAMPS ==" << std::endl << std::endl;
         for (auto &data : factory.getLoadingRampsData())
         {
-            stream << std::format("LOADING_RAMP id={} delivery-interval={}", data.id, data.deliveryInterval) << std::endl;
+            stream << std::format("LOADING_RAMP id={} delivery-interval={}", data.id, data.deliveryInterval)
+                   << std::endl;
         }
-        stream << std::endl
-               << "; == WORKERS ==" << std::endl
-               << std::endl;
+        stream << std::endl << "; == WORKERS ==" << std::endl << std::endl;
         for (auto &data : factory.getWorkersData())
         {
-            stream << std::format("WORKER id={} processing-time={} queue-type={}", data.id, data.processingTime, toString(data.type)) << std::endl;
+            stream << std::format("WORKER id={} processing-time={} queue-type={}", data.id, data.processingTime,
+                                  toString(data.type))
+                   << std::endl;
         }
-        stream << std::endl
-               << "; == STOREHOUSES ==" << std::endl
-               << std::endl;
+        stream << std::endl << "; == STOREHOUSES ==" << std::endl << std::endl;
         for (auto &data : factory.getStorehousesData())
         {
             stream << std::format("STOREHOUSE id={}", data.id) << std::endl;
         }
 
-        stream << std::endl
-               << "; == LINKS ==" << std::endl
-               << std::endl;
+        stream << std::endl << "; == LINKS ==" << std::endl << std::endl;
         for (auto &data : factory.getLinksData())
         {
-            stream << std::format("LINK id={} src={}-{} dest={}-{} p={}", data.id, toString(data.source.type), data.source.id, toString(data.destination.type), data.destination.id, data.probability) << std::endl;
+            stream << std::format("LINK id={} src={}-{} dest={}-{} p={}", data.id, toString(data.source.type),
+                                  data.source.id, toString(data.destination.type), data.destination.id,
+                                  data.probability)
+                   << std::endl;
         }
         return stream;
     }
 
-    std::string getOffset(size_t offset) { return std::string(offset, '\t'); }
+    std::string getOffset(size_t offset)
+    {
+        return std::string(offset, '\t');
+    }
 
     std::string toString(NodeType type)
     {
@@ -361,4 +385,4 @@ namespace sd
     {
         return type == WorkerType::FIFO ? "FIFO" : "LIFO";
     }
-}
+} // namespace sd

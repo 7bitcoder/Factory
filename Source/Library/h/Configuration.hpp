@@ -1,9 +1,10 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
-#include <optional>
+
 
 namespace sd
 {
@@ -16,4 +17,4 @@ namespace sd
         std::optional<std::string> raportFile = std::nullopt;
     };
 
-}
+} // namespace sd

@@ -1,17 +1,23 @@
-#include <sstream>
 #include <format>
+#include <sstream>
 
 #include "Worker.hpp"
 
 namespace sd
 {
     Worker::Worker(size_t id, WorkerType type, size_t processingTime)
-        : SourceNode(id), Processable(processingTime), DestinationNode(id), _type(type), Node(id) {}
+        : SourceNode(id), Processable(processingTime), DestinationNode(id), _type(type), Node(id)
+    {
+    }
 
-    Worker::Worker(const WorkerData &data)
-        : Worker(data.id, data.type, data.processingTime) {}
+    Worker::Worker(const WorkerData &data) : Worker(data.id, data.type, data.processingTime)
+    {
+    }
 
-    bool Worker::isProcessingProduct() const { return bool{_currentProduct}; }
+    bool Worker::isProcessingProduct() const
+    {
+        return bool{_currentProduct};
+    }
 
     std::string Worker::getStructureRaport(size_t offset) const
     {
@@ -33,12 +39,19 @@ namespace sd
 
     std::string Worker::getCurrentWorkRaport() const
     {
-        return _currentProduct ? std::format("{} (pt = {}), ", _currentProduct->toString(), getCurrentProcesingTime()) : "";
+        return _currentProduct ? std::format("{} (pt = {}), ", _currentProduct->toString(), getCurrentProcesingTime())
+                               : "";
     };
 
-    std::string Worker::toString() const { return std::format("WORKER #{}", getId()); }
+    std::string Worker::toString() const
+    {
+        return std::format("WORKER #{}", getId());
+    }
 
-    NodeType Worker::getNodeType() const { return NodeType::WORKER; }
+    NodeType Worker::getNodeType() const
+    {
+        return NodeType::WORKER;
+    }
 
     void Worker::process(const size_t currentTime)
     {
@@ -70,7 +83,13 @@ namespace sd
         }
     }
 
-    WorkerType Worker::getWorkerType() const { return _type; }
+    WorkerType Worker::getWorkerType() const
+    {
+        return _type;
+    }
 
-    const WorkerData Worker::getWorkerData() const { return {getId(), getTotalProcesingTime(), getWorkerType()}; }
-}
+    const WorkerData Worker::getWorkerData() const
+    {
+        return {getId(), getTotalProcesingTime(), getWorkerType()};
+    }
+} // namespace sd

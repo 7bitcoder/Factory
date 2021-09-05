@@ -7,17 +7,17 @@ namespace sd
 
     class Processable : public IProcessable
     {
-    private:
+      private:
         const size_t _totalProcessTime;
         size_t _currentProcessTime;
         bool _stopped;
 
-    public:
+      public:
         Processable(size_t processTime);
 
         void process(const size_t currentTime) override;
 
-    protected:
+      protected:
         size_t getTotalProcesingTime() const;
 
         size_t getCurrentProcesingTime() const;
@@ -26,7 +26,7 @@ namespace sd
 
         void reset();
 
-    private:
+      private:
         void resetProcessTime();
     };
-}
+} // namespace sd

@@ -12,8 +12,7 @@ namespace sd
 
         std::ostream &operator<<(std::ostream &out, const dEnd &t)
         {
-            out << std::endl
-                << std::endl;
+            out << std::endl << std::endl;
             return out;
         }
 
@@ -29,7 +28,7 @@ namespace sd
                 node.passProduct();
             }
         }
-    }
+    } // namespace
 
     Factory::RaportGuard::RaportGuard(const std::variant<size_t, std::vector<size_t>> &var)
     {
@@ -129,7 +128,8 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find LoadingRamp of id {} to be link source.", data.source.id));
+                throw std::runtime_error(
+                    std::format("Could not find LoadingRamp of id {} to be link source.", data.source.id));
             }
         }
         else // Worker
@@ -140,7 +140,8 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Worker of id {} to be link source.", data.source.id));
+                throw std::runtime_error(
+                    std::format("Could not find Worker of id {} to be link source.", data.source.id));
             }
         }
 
@@ -156,7 +157,8 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Storehouse of id {} to be link destination.", data.destination.id));
+                throw std::runtime_error(
+                    std::format("Could not find Storehouse of id {} to be link destination.", data.destination.id));
             }
         }
         else // Worker
@@ -167,7 +169,8 @@ namespace sd
             }
             else
             {
-                throw std::runtime_error(std::format("Could not find Worker of id {} to be link destination.", data.destination.id));
+                throw std::runtime_error(
+                    std::format("Could not find Worker of id {} to be link destination.", data.destination.id));
             }
         }
 
@@ -278,8 +281,8 @@ namespace sd
 
     size_t Factory::removeExpiredLinks()
     {
-        return std::erase_if(_links, [](const std::pair<const size_t, sd::Link::WeakPtr> &item)
-                             { return item.second.expired(); });
+        return std::erase_if(
+            _links, [](const std::pair<const size_t, sd::Link::WeakPtr> &item) { return item.second.expired(); });
     }
 
     void Factory::validate() const
@@ -292,7 +295,8 @@ namespace sd
             }
             if (!worker->connectedDestinations())
             {
-                throw std::runtime_error(std::format("Worker of id {} is not connected as destination.", worker->getId()));
+                throw std::runtime_error(
+                    std::format("Worker of id {} is not connected as destination.", worker->getId()));
             }
         }
 
@@ -308,7 +312,8 @@ namespace sd
         {
             if (!store->connectedDestinations())
             {
-                throw std::runtime_error(std::format("StoreHouse of id {} is not connected as destination.", store->getId()));
+                throw std::runtime_error(
+                    std::format("StoreHouse of id {} is not connected as destination.", store->getId()));
             }
         }
     }
@@ -350,7 +355,10 @@ namespace sd
         return out.str();
     }
 
-    bool Factory::initialized() const { return !_loadingRamps.empty() || !_workers.empty() || !_storeHouses.empty() || !_links.empty(); }
+    bool Factory::initialized() const
+    {
+        return !_loadingRamps.empty() || !_workers.empty() || !_storeHouses.empty() || !_links.empty();
+    }
 
     void Factory::run(size_t maxIterations, std::ostream &raportOutStream, const RaportGuard &raportGuard)
     {
@@ -383,4 +391,4 @@ namespace sd
             }
         }
     }
-}
+} // namespace sd

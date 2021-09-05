@@ -2,8 +2,8 @@
 
 int main(int argc, char *argv[])
 {
-  // Run a specific test only
+    // Run a specific test only
 
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    ::testing::InitGoogleTest(&argc, argv);
+    return RUN_ALL_TESTS();
 }

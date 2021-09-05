@@ -1,24 +1,33 @@
+#include <format>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
-#include <gtest/gtest.h>
-#include <format>
+
 
 #include "Product.hpp"
 
 class ProductTest : public ::testing::Test
 {
-protected:
-    ProductTest() {}
+  protected:
+    ProductTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~ProductTest() {}
+    ~ProductTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(ProductTest, CreateTest)

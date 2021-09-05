@@ -2,11 +2,20 @@
 
 namespace sd
 {
-    Processable::Processable(size_t processTime) : _totalProcessTime(processTime), _currentProcessTime(0), _stopped(false) {}
+    Processable::Processable(size_t processTime)
+        : _totalProcessTime(processTime), _currentProcessTime(0), _stopped(false)
+    {
+    }
 
-    size_t Processable::getTotalProcesingTime() const { return _totalProcessTime; }
+    size_t Processable::getTotalProcesingTime() const
+    {
+        return _totalProcessTime;
+    }
 
-    size_t Processable::getCurrentProcesingTime() const { return _currentProcessTime; }
+    size_t Processable::getCurrentProcesingTime() const
+    {
+        return _currentProcessTime;
+    }
 
     void Processable::process(const size_t currentTime)
     {
@@ -29,5 +38,8 @@ namespace sd
         resetProcessTime();
     }
 
-    void Processable::resetProcessTime() { _currentProcessTime = 0; }
-}
+    void Processable::resetProcessTime()
+    {
+        _currentProcessTime = 0;
+    }
+} // namespace sd

@@ -1,24 +1,33 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <memory>
-#include <gtest/gtest.h>
+
 
 #include "LoadingRamp.hpp"
 #include "Worker.hpp"
 
 class LoadingRampTest : public ::testing::Test
 {
-protected:
-    LoadingRampTest() {}
+  protected:
+    LoadingRampTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~LoadingRampTest() {}
+    ~LoadingRampTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(LoadingRampTest, CreateTest)
@@ -67,7 +76,8 @@ TEST_F(LoadingRampTest, StructureRaportWithLinksTest)
     worker2->bindDestinationLink(link2);
     worker3->bindDestinationLink(link3);
 
-    auto expected = "LOADING_RAMP #1\n\tDelivery interval: 2\n\tReceivers:\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)";
+    auto expected = "LOADING_RAMP #1\n\tDelivery interval: 2\n\tReceivers:\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p "
+                    "= 0.33)\n\t\tWORKER #1 (p = 0.33)";
 
     EXPECT_EQ(loadingRamp->getStructureRaport(0), expected);
 }
@@ -86,11 +96,7 @@ TEST_F(LoadingRampTest, ProcessTest)
     loadingRamp->process(0);
     loadingRamp->process(1);
     EXPECT_THROW(
-        try
-        {
-            loadingRamp->passProduct();
-        } catch (const std::runtime_error &e)
-        {
+        try { loadingRamp->passProduct(); } catch (const std::runtime_error &e) {
             EXPECT_STREQ("No links available", e.what());
             throw;
         },
@@ -105,11 +111,7 @@ TEST_F(LoadingRampTest, ProcessFailTest)
     loadingRamp->process(1);
     loadingRamp->process(2);
     EXPECT_THROW(
-        try
-        {
-        loadingRamp->process(3);
-        } catch (const std::runtime_error &e)
-        {
+        try { loadingRamp->process(3); } catch (const std::runtime_error &e) {
             EXPECT_STREQ("Simulation Error", e.what());
             throw;
         },

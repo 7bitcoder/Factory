@@ -1,12 +1,14 @@
 #pragma once
 
-#include <random>
 #include <iomanip>
+#include <random>
 #include <vector>
 
-#include "Interfaces.hpp"
+
 #include "Identifiable.hpp"
+#include "Interfaces.hpp"
 #include "Product.hpp"
+
 
 namespace sd
 {
@@ -29,17 +31,15 @@ namespace sd
         LinkBind destination;
     };
 
-    class Link final
-        : public Identifiable,
-          public IStructureRaportable
+    class Link final : public Identifiable, public IStructureRaportable
     {
-    private:
+      private:
         const double _baseProbability;
         double _probability;
         SourceNode &_source;
         DestinationNode &_destination;
 
-    public:
+      public:
         using Ptr = std::shared_ptr<Link>;
         using WeakPtr = std::weak_ptr<Link>;
 
@@ -61,4 +61,4 @@ namespace sd
         void unBindSource();
         void unBindDestination();
     };
-}
+} // namespace sd

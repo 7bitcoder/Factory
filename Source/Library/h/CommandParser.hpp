@@ -2,8 +2,9 @@
 #include <iostream>
 #include <memory>
 
-#include "Interfaces.hpp"
 #include "Configuration.hpp"
+#include "Interfaces.hpp"
+
 
 namespace CLI
 {
@@ -14,11 +15,11 @@ namespace sd
 {
     class CommandParser
     {
-    private:
+      private:
         std::unique_ptr<CLI::App> _app;
         Configuration _results;
 
-    public:
+      public:
         CommandParser();
         ~CommandParser();
 
@@ -26,4 +27,4 @@ namespace sd
 
         const Configuration &getResults() const;
     };
-}
+} // namespace sd

@@ -1,26 +1,36 @@
-#include <iostream>
-#include <memory>
 #include <format>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
 
-#include "Worker.hpp"
-#include "StoreHouse.hpp"
+
 #include "Link.hpp"
+#include "StoreHouse.hpp"
+#include "Worker.hpp"
+
 
 class WorkerTest : public ::testing::Test
 {
-protected:
-    WorkerTest() {}
+  protected:
+    WorkerTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~WorkerTest() {}
+    ~WorkerTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(WorkerTest, CreateTest)
@@ -70,7 +80,8 @@ TEST_F(WorkerTest, StructureRaportWithLinksTest)
     worker3->bindDestinationLink(link2);
     storeHouse->bindDestinationLink(link3);
 
-    auto expected = "WORKER #1\n\tProcessing time: 3\n\tQueue type: FIFO\n\tReceivers:\n\t\tWORKER #1 (p = 0.33)\n\t\tWORKER #1 (p = 0.33)\n\t\tSTOREHOUSE #1 (p = 0.33)";
+    auto expected = "WORKER #1\n\tProcessing time: 3\n\tQueue type: FIFO\n\tReceivers:\n\t\tWORKER #1 (p = "
+                    "0.33)\n\t\tWORKER #1 (p = 0.33)\n\t\tSTOREHOUSE #1 (p = 0.33)";
 
     EXPECT_EQ(worker1->getStructureRaport(0), expected);
 }
@@ -102,7 +113,8 @@ TEST_F(WorkerTest, StateRaportWithFilledQueueTest)
 
     worker->process(0);
 
-    auto expected = std::format("WORKER #1\n\tQueue: #{} (pt = 1), #{}, #{}", expectedProduct1Id, expectedProduct2Id, expectedProduct3Id);
+    auto expected = std::format("WORKER #1\n\tQueue: #{} (pt = 1), #{}, #{}", expectedProduct1Id, expectedProduct2Id,
+                                expectedProduct3Id);
 
     EXPECT_EQ(worker->getStateRaport(0), expected);
 }
@@ -165,11 +177,7 @@ TEST_F(WorkerTest, ProcessTest)
     worker->process(1);
     worker->process(2);
     EXPECT_THROW(
-        try
-        {
-            worker->passProduct();
-        } catch (const std::runtime_error &e)
-        {
+        try { worker->passProduct(); } catch (const std::runtime_error &e) {
             EXPECT_STREQ("No links available", e.what());
             throw;
         },
@@ -185,18 +193,14 @@ TEST_F(WorkerTest, ProcessFailTest)
 
     worker->addProductToStore(std::move(product));
     worker->addProductToStore(std::move(product2));
-    
+
     worker->process(0);
     worker->process(1);
     worker->process(2);
     worker->process(3);
     worker->process(4);
     EXPECT_THROW(
-        try
-        {
-            worker->process(5);
-        } catch (const std::runtime_error &e)
-        {
+        try { worker->process(5); } catch (const std::runtime_error &e) {
             EXPECT_STREQ("Simulation Error", e.what());
             throw;
         },

@@ -1,10 +1,11 @@
 #pragma once
 
-#include "Utils.hpp"
-#include "Product.hpp"
 #include "Link.hpp"
 #include "Node.hpp"
 #include "Processable.hpp"
+#include "Product.hpp"
+#include "Utils.hpp"
+
 
 namespace sd
 {
@@ -17,7 +18,7 @@ namespace sd
 
     class LoadingRamp final : public SourceNode, public Processable
     {
-    public:
+      public:
         using Ptr = std::unique_ptr<LoadingRamp>;
 
         LoadingRamp(size_t id, size_t deliveryInterval = 1);
@@ -32,10 +33,10 @@ namespace sd
 
         NodeType getNodeType() const final;
 
-    protected:
+      protected:
         void triggerOperation() final;
 
-    private:
+      private:
         Product::Ptr createProduct() const;
     };
-}
+} // namespace sd

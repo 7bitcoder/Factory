@@ -1,23 +1,32 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <thread>
-#include <gtest/gtest.h>
+
 
 #include "Utils.hpp"
 
 class UtilsTest : public ::testing::Test
 {
-protected:
-    UtilsTest() {}
+  protected:
+    UtilsTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~UtilsTest() {}
+    ~UtilsTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(UtilsTest, SplitStrTest)

@@ -1,8 +1,9 @@
 #pragma once
 
 #include <iostream>
-#include <vector>
 #include <memory>
+#include <vector>
+
 
 namespace sd
 {
@@ -30,4 +31,4 @@ namespace sd
 
     std::string toString(NodeType type);
     std::string toString(WorkerType type);
-}
+} // namespace sd

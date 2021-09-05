@@ -1,24 +1,33 @@
-#include <iostream>
-#include <memory>
 #include <format>
 #include <gtest/gtest.h>
+#include <iostream>
+#include <memory>
+
 
 #include "StoreHouse.hpp"
 
 class StoreHouseTest : public ::testing::Test
 {
-protected:
-    StoreHouseTest() {}
+  protected:
+    StoreHouseTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~StoreHouseTest() {}
+    ~StoreHouseTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(StoreHouseTest, CreateTest)
@@ -69,7 +78,8 @@ TEST_F(StoreHouseTest, StateRaportWithFilledQueueTest)
     storeHouse->addProductToStore(std::move(product2));
     storeHouse->addProductToStore(std::move(product3));
 
-    auto expected = std::format("STOREHOUSE #1\n\tQueue: #{}, #{}, #{}", expectedProduct1Id, expectedProduct2Id, expectedProduct3Id);
+    auto expected = std::format("STOREHOUSE #1\n\tQueue: #{}, #{}, #{}", expectedProduct1Id, expectedProduct2Id,
+                                expectedProduct3Id);
 
     EXPECT_EQ(storeHouse->getStateRaport(0), expected);
 }
@@ -101,7 +111,7 @@ TEST_F(StoreHouseTest, GetProductTest)
     auto product1 = std::make_unique<sd::Product>();
     auto product2 = std::make_unique<sd::Product>();
     auto product3 = std::make_unique<sd::Product>();
-    
+
     auto expectedProduct1Id = product1->getId();
     auto expectedProduct2Id = product2->getId();
     auto expectedProduct3Id = product3->getId();

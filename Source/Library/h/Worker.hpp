@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Node.hpp"
 #include "Link.hpp"
+#include "Node.hpp"
 #include "Processable.hpp"
+
 
 namespace sd
 {
@@ -14,16 +15,13 @@ namespace sd
         WorkerType type;
     };
 
-    class Worker final
-        : public SourceNode,
-          public DestinationNode,
-          public Processable
+    class Worker final : public SourceNode, public DestinationNode, public Processable
     {
-    private:
+      private:
         WorkerType _type;
         Product::Ptr _currentProduct;
 
-    public:
+      public:
         using Ptr = std::unique_ptr<Worker>;
 
         Worker(size_t id, WorkerType type = WorkerType::FIFO, size_t processingTime = 1);
@@ -44,12 +42,12 @@ namespace sd
 
         bool isProcessingProduct() const;
 
-    protected:
+      protected:
         void triggerOperation() final;
 
-    private:
+      private:
         WorkerType getWorkerType() const;
 
         std::string getCurrentWorkRaport() const;
     };
-}
+} // namespace sd

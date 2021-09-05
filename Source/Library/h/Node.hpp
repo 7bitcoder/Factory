@@ -1,34 +1,31 @@
 #pragma once
-#include <memory>
 #include <deque>
+#include <memory>
 
-#include "Interfaces.hpp"
+
 #include "Identifiable.hpp"
-#include "Product.hpp"
+#include "Interfaces.hpp"
 #include "Link.hpp"
+#include "Product.hpp"
+
 
 namespace sd
 {
-    class Node
-        : public Identifiable,
-          public IToString,
-          public IType
+    class Node : public Identifiable, public IToString, public IType
     {
-    public:
+      public:
         using Ptr = std::shared_ptr<Node>;
         Node(size_t id);
     };
 
-    class SourceNode
-        : virtual public Node,
-          virtual public IStructureRaportable
+    class SourceNode : virtual public Node, virtual public IStructureRaportable
     {
-    private:
+      private:
         Product::Ptr _product;
 
         std::vector<Link::Ptr> _links;
-    public:
 
+      public:
         using Ptr = std::shared_ptr<SourceNode>;
         using RawPtr = SourceNode *;
 
@@ -48,23 +45,21 @@ namespace sd
         void unbindAllSources();
 
         bool isProductReady() const;
-    private:
+
+      private:
         void normalize();
 
         Link::Ptr getRandomLink() const;
     };
 
-    class DestinationNode
-        : virtual public Node,
-          virtual public IStructureRaportable,
-          public IStateRaportable
+    class DestinationNode : virtual public Node, virtual public IStructureRaportable, public IStateRaportable
     {
-    private:
+      private:
         std::deque<Product::Ptr> _storedProducts;
 
         std::vector<Link::Ptr> _links;
 
-    public:
+      public:
         using Ptr = std::shared_ptr<DestinationNode>;
         using RawPtr = DestinationNode *;
 
@@ -86,4 +81,4 @@ namespace sd
         bool areProductsAvailable() const;
         size_t getStoredProductsSize() const;
     };
-}
+} // namespace sd

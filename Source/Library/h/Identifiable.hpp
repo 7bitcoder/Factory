@@ -3,12 +3,12 @@ namespace sd
 {
     class Identifiable
     {
-    private:
+      private:
         const size_t _id;
 
-    public:
+      public:
         Identifiable(size_t id);
 
         size_t getId() const;
     };
-}
+} // namespace sd

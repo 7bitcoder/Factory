@@ -6,7 +6,12 @@ namespace sd
 {
     size_t Product::_idSeed = 0;
 
-    Product::Product() : Identifiable(_idSeed++) {}
+    Product::Product() : Identifiable(_idSeed++)
+    {
+    }
 
-    std::string Product::toString() const { return std::format("#{}", getId()); }
-}
+    std::string Product::toString() const
+    {
+        return std::format("#{}", getId());
+    }
+} // namespace sd

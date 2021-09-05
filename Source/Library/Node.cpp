@@ -5,9 +5,13 @@
 
 namespace sd
 {
-    Node::Node(size_t id) : Identifiable(id) {}
+    Node::Node(size_t id) : Identifiable(id)
+    {
+    }
 
-    SourceNode::SourceNode(size_t id) : Node(id) {}
+    SourceNode::SourceNode(size_t id) : Node(id)
+    {
+    }
 
     void SourceNode::setProduct(Product::Ptr &&product)
     {
@@ -55,13 +59,15 @@ namespace sd
 
     void SourceNode::unBindSourceLink(size_t id)
     {
-        _links.erase(std::remove_if(_links.begin(), _links.end(), [id](Link::Ptr ptr)
-                                    { return ptr->getId() == id; }),
+        _links.erase(std::remove_if(_links.begin(), _links.end(), [id](Link::Ptr ptr) { return ptr->getId() == id; }),
                      _links.end());
         normalize();
     }
 
-    bool SourceNode::connectedSources() const { return !_links.empty(); }
+    bool SourceNode::connectedSources() const
+    {
+        return !_links.empty();
+    }
 
     void SourceNode::unbindAllSources()
     {
@@ -71,7 +77,10 @@ namespace sd
         }
     }
 
-    bool SourceNode::isProductReady() const { return bool{_product}; }
+    bool SourceNode::isProductReady() const
+    {
+        return bool{_product};
+    }
 
     Link::Ptr SourceNode::getRandomLink() const
     {
@@ -107,7 +116,9 @@ namespace sd
         }
     }
 
-    DestinationNode::DestinationNode(size_t id) : Node(id) {}
+    DestinationNode::DestinationNode(size_t id) : Node(id)
+    {
+    }
 
     void DestinationNode::addProductToStore(Product::Ptr &&product)
     {
@@ -148,16 +159,21 @@ namespace sd
         return out.str();
     }
 
-    void DestinationNode::bindDestinationLink(Link::Ptr link) { _links.emplace_back(link); }
+    void DestinationNode::bindDestinationLink(Link::Ptr link)
+    {
+        _links.emplace_back(link);
+    }
 
     void DestinationNode::unBindDestinationLink(size_t id)
     {
-        _links.erase(std::remove_if(_links.begin(), _links.end(), [id](Link::Ptr ptr)
-                                    { return ptr->getId() == id; }),
+        _links.erase(std::remove_if(_links.begin(), _links.end(), [id](Link::Ptr ptr) { return ptr->getId() == id; }),
                      _links.end());
     }
 
-    bool DestinationNode::connectedDestinations() const { return !_links.empty(); }
+    bool DestinationNode::connectedDestinations() const
+    {
+        return !_links.empty();
+    }
 
     void DestinationNode::unbindAllDestinations()
     {
@@ -167,7 +183,13 @@ namespace sd
         }
     }
 
-    bool DestinationNode::areProductsAvailable() const { return getStoredProductsSize() > 0; }
+    bool DestinationNode::areProductsAvailable() const
+    {
+        return getStoredProductsSize() > 0;
+    }
 
-    size_t DestinationNode::getStoredProductsSize() const { return _storedProducts.size(); }
-}
+    size_t DestinationNode::getStoredProductsSize() const
+    {
+        return _storedProducts.size();
+    }
+} // namespace sd

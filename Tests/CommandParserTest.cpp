@@ -1,8 +1,9 @@
-#include <iostream>
-#include <thread>
+#include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
-#include <filesystem>
+#include <iostream>
+#include <thread>
+
 
 #include "CommandParser.hpp"
 #include "Utils.hpp"
@@ -11,14 +12,18 @@ using variant = std::variant<size_t, std::vector<size_t>>;
 
 class CommandParserTest : public ::testing::Test
 {
-protected:
-    CommandParserTest() {}
+  protected:
+    CommandParserTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
     bool parse(const std::string &line, std::ostream &out, std::ostream &err)
     {
@@ -40,9 +45,13 @@ protected:
 
     sd::CommandParser parser;
 
-    ~CommandParserTest() {}
+    ~CommandParserTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(CommandParserTest, FactoryFileArgTest)
@@ -70,7 +79,8 @@ TEST_F(CommandParserTest, FactoryFileWrongArgTest)
     std::stringstream str;
     std::filesystem::path filename = "nonExistingFile.txt";
 
-    std::string expected = std::format("--file: File does not exist: {}\nRun with --help for more information.\n", filename.string());
+    std::string expected =
+        std::format("--file: File does not exist: {}\nRun with --help for more information.\n", filename.string());
 
     EXPECT_FALSE(parse(std::format("Factory.exe -f {}", filename.string()), str, str));
     EXPECT_EQ(expected, str.str());
@@ -87,7 +97,9 @@ TEST_F(CommandParserTest, MultipleOptionsTest)
     std::ofstream outfile(filename);
     outfile.close();
 
-    EXPECT_TRUE(parse(std::format("Factory.exe -f {} -m {} -i {} -r {}", filename.string(), maxIterations, raportInterval, raportFile.string()), str, str));
+    EXPECT_TRUE(parse(std::format("Factory.exe -f {} -m {} -i {} -r {}", filename.string(), maxIterations,
+                                  raportInterval, raportFile.string()),
+                      str, str));
     std::filesystem::remove(filename);
 
     EXPECT_TRUE(str.str().empty());
@@ -111,8 +123,10 @@ TEST_F(CommandParserTest, OptionsExcludedTest)
     std::ofstream outfile(filename);
     outfile.close();
 
-    EXPECT_FALSE(parse(std::format("Factory.exe -f {} -i {} -t {} {}", filename.string(), raportInterval, raportTimes[0], raportTimes[1]), str, str));
-    
+    EXPECT_FALSE(parse(std::format("Factory.exe -f {} -i {} -t {} {}", filename.string(), raportInterval,
+                                   raportTimes[0], raportTimes[1]),
+                       str, str));
+
     std::filesystem::remove(filename);
 
     EXPECT_EQ(str.str(), expected);

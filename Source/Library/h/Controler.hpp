@@ -1,10 +1,12 @@
 #pragma once
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 
+
+#include "Configuration.hpp"
 #include "Factory.hpp"
 #include "Interfaces.hpp"
-#include "Configuration.hpp"
+
 
 namespace CLI
 {
@@ -15,7 +17,7 @@ namespace sd
 {
     class Controler
     {
-    private:
+      private:
         Factory::Ptr _factory;
         Configuration _config;
         std::unique_ptr<CLI::App> _cli;
@@ -23,19 +25,20 @@ namespace sd
         std::ostream &_err;
         std::istream &_in;
 
-    public:
+      public:
         Controler(const Configuration &config, std::ostream &out, std::ostream &err, std::istream &in);
         ~Controler();
 
         void run();
 
-    private:
+      private:
         void buildCommandLineInterface();
 
-        void runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations, const Factory::RaportGuard &raportGuard);
+        void runSimulation(const std::optional<std::string> &raportfilePath, size_t maxIterations,
+                           const Factory::RaportGuard &raportGuard);
 
         std::ostream &getOut();
         std::ostream &getErr();
         std::istream &getIn();
     };
-}
+} // namespace sd

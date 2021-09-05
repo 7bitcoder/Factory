@@ -2,21 +2,22 @@
 
 #include <memory>
 
-#include "Interfaces.hpp"
 #include "Identifiable.hpp"
+#include "Interfaces.hpp"
+
 
 namespace sd
 {
-    class Product final: public Identifiable, public IToString
+    class Product final : public Identifiable, public IToString
     {
-    private:
+      private:
         static size_t _idSeed;
 
-    public:
+      public:
         using Ptr = std::unique_ptr<Product>;
 
         Product();
 
         std::string toString() const final;
     };
-}
+} // namespace sd

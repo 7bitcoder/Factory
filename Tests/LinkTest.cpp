@@ -1,26 +1,36 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <thread>
-#include <gtest/gtest.h>
+
 
 #include "Link.hpp"
 #include "LoadingRamp.hpp"
-#include "Worker.hpp"
 #include "StoreHouse.hpp"
+#include "Worker.hpp"
+
 
 class LinkTest : public ::testing::Test
 {
-protected:
-    LinkTest() {}
+  protected:
+    LinkTest()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~LinkTest() {}
+    ~LinkTest()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(LinkTest, CreateTest)
@@ -58,13 +68,11 @@ TEST_F(LinkTest, CreateProbabilityClampTest)
 TEST_F(LinkTest, BadCreateTest)
 {
     EXPECT_THROW(
-        try
-        {
+        try {
             sd::LoadingRamp ramp{3};
             sd::StoreHouse store{2};
             auto ptr = std::make_unique<sd::Link>(1, 0.5, ramp, store);
-        } catch (const std::runtime_error &e)
-        {
+        } catch (const std::runtime_error &e) {
             EXPECT_STREQ("Cannot bind Ramp and Store.", e.what());
             throw;
         },
@@ -74,13 +82,11 @@ TEST_F(LinkTest, BadCreateTest)
 TEST_F(LinkTest, BadCreateZeroProbabilityTest)
 {
     EXPECT_THROW(
-        try
-        {
+        try {
             sd::Worker worker{3};
             sd::StoreHouse store{2};
             auto ptr = std::make_unique<sd::Link>(1, 0, worker, store);
-        } catch (const std::runtime_error &e)
-        {
+        } catch (const std::runtime_error &e) {
             EXPECT_STREQ("Probability Cannot be set to 0.", e.what());
             throw;
         },

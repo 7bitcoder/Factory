@@ -14,7 +14,7 @@ namespace sd
 
     class StoreHouse final : public DestinationNode
     {
-    public:
+      public:
         using Ptr = std::unique_ptr<StoreHouse>;
 
         StoreHouse(size_t id);
@@ -31,4 +31,4 @@ namespace sd
 
         NodeType getNodeType() const final;
     };
-}
+} // namespace sd

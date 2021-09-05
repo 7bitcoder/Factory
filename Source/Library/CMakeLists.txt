@@ -6,4 +6,3 @@ target_include_directories(FactoryLib PUBLIC
   h
 )
 
-file(COPY factory.txt DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})

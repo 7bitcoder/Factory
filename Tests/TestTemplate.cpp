@@ -1,24 +1,33 @@
+#include <gtest/gtest.h>
 #include <iostream>
 #include <thread>
-#include <gtest/gtest.h>
+
 
 class Template : public ::testing::Test
 {
-protected:
-    Template() {}
+  protected:
+    Template()
+    {
+    }
 
     void SetUp() override
     {
     }
 
-    void TearDown() override {}
+    void TearDown() override
+    {
+    }
 
-    ~Template() {}
+    ~Template()
+    {
+    }
 
-    static void TearDownTestSuite() {}
+    static void TearDownTestSuite()
+    {
+    }
 };
 
 TEST_F(Template, ExampleTest)
 {
-   EXPECT_TRUE(true);
+    EXPECT_TRUE(true);
 }

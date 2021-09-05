@@ -8,7 +8,8 @@
 namespace sd
 {
     Link::Link(size_t id, double probability, SourceNode &source, DestinationNode &destination)
-        : Identifiable(id), _baseProbability(std::clamp(probability, .0, 1.0)), _source(source), _destination(destination)
+        : Identifiable(id), _baseProbability(std::clamp(probability, .0, 1.0)), _source(source),
+          _destination(destination)
     {
         if (source.getNodeType() == NodeType::RAMP && destination.getNodeType() == NodeType::STORE)
         {
@@ -22,26 +23,55 @@ namespace sd
     }
 
     Link::Link(const LinkData &data, SourceNode &source, DestinationNode &destination)
-        : Link(data.id, data.probability, source, destination) {}
+        : Link(data.id, data.probability, source, destination)
+    {
+    }
 
     const LinkData Link::getLinkData() const
     {
-        return {getId(), getBaseProbability(), {_source.getId(), _source.getNodeType()}, {_destination.getId(), _destination.getNodeType()}};
+        return {getId(),
+                getBaseProbability(),
+                {_source.getId(), _source.getNodeType()},
+                {_destination.getId(), _destination.getNodeType()}};
     }
 
-    double Link::getProbability() const { return _probability; }
+    double Link::getProbability() const
+    {
+        return _probability;
+    }
 
-    double Link::getBaseProbability() const { return _baseProbability; }
+    double Link::getBaseProbability() const
+    {
+        return _baseProbability;
+    }
 
-    void Link::setProbability(double newProbability) { _probability = newProbability; }
+    void Link::setProbability(double newProbability)
+    {
+        _probability = newProbability;
+    }
 
-    std::string Link::getStructureRaport(size_t offset) const { return std::format("{}{} (p = {:.2f})", getOffset(offset), _destination.toString(), getProbability()); }
+    std::string Link::getStructureRaport(size_t offset) const
+    {
+        return std::format("{}{} (p = {:.2f})", getOffset(offset), _destination.toString(), getProbability());
+    }
 
-    void Link::unBindSource() { _source.unBindSourceLink(getId()); }
+    void Link::unBindSource()
+    {
+        _source.unBindSourceLink(getId());
+    }
 
-    void Link::unBindDestination() { _destination.unBindDestinationLink(getId()); }
+    void Link::unBindDestination()
+    {
+        _destination.unBindDestinationLink(getId());
+    }
 
-    SourceNode &Link::getSource() { return _source; }
+    SourceNode &Link::getSource()
+    {
+        return _source;
+    }
 
-    DestinationNode &Link::getDestination() { return _destination; }
-}
+    DestinationNode &Link::getDestination()
+    {
+        return _destination;
+    }
+} // namespace sd

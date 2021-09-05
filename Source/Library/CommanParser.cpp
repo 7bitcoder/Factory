@@ -1,5 +1,5 @@
-#include <memory>
 #include <iostream>
+#include <memory>
 
 #include "CLI11.hpp"
 #include "CommandParser.hpp"
@@ -7,37 +7,27 @@
 namespace sd
 {
 
-    CommandParser::~CommandParser() {}
+    CommandParser::~CommandParser()
+    {
+    }
 
     CommandParser::CommandParser()
     {
         _app = std::make_unique<CLI::App>("Factory");
 
         auto raportTimings = _app->add_option<decltype(_results.stateRaportTimings), std::vector<size_t>>(
-            "-t,--raportTimings",
-            _results.stateRaportTimings,
+            "-t,--raportTimings", _results.stateRaportTimings,
             "State raport will be generater every iterations provided in list");
 
         _app->add_option<decltype(_results.stateRaportTimings), size_t>(
-                "-i,--raportInterval",
-                _results.stateRaportTimings,
-                "State raport will be generater every interval")
+                "-i,--raportInterval", _results.stateRaportTimings, "State raport will be generater every interval")
             ->excludes(raportTimings);
 
-        _app->add_option(
-            "-r,--raportFile",
-            _results.raportFile,
-            "State raports will be saved in this file");
+        _app->add_option("-r,--raportFile", _results.raportFile, "State raports will be saved in this file");
 
-        _app->add_option(
-            "-m,--maxIterations",
-            _results.maxIterations,
-            "Maximum iteration that simulation will be run");
+        _app->add_option("-m,--maxIterations", _results.maxIterations, "Maximum iteration that simulation will be run");
 
-        auto file = _app->add_option(
-            "-f,--file",
-            _results.structureFile,
-            "File that contains fabric structure");
+        auto file = _app->add_option("-f,--file", _results.structureFile, "File that contains fabric structure");
         file->check(CLI::ExistingFile);
         file->required();
     }
@@ -56,6 +46,9 @@ namespace sd
         return true;
     }
 
-    const Configuration &CommandParser::getResults() const { return _results; }
+    const Configuration &CommandParser::getResults() const
+    {
+        return _results;
+    }
 
-}
+} // namespace sd
